@@ -126,7 +126,7 @@ class K2JSCompiler : CLICompiler<K2JSCompilerArguments>() {
 
         compilerImpl.checkTargetArguments()?.let { return it }
 
-        val pluginLoadResult = loadPlugins(paths, arguments, configuration)
+        val pluginLoadResult = loadPlugins(paths, arguments, configuration, rootDisposable)
         if (pluginLoadResult != OK) return pluginLoadResult
 
         val libraries: List<String> = configureLibraries(arguments.libraries) + listOfNotNull(arguments.includes)
@@ -662,6 +662,11 @@ fun loadPluginsForTests(configuration: CompilerConfiguration): ExitCode {
         PathUtil.KOTLIN_SCRIPTING_PLUGIN_CLASSPATH_JARS.map { File(libPath, it) }.partition { it.exists() }
     pluginClasspath = jars.map { it.canonicalPath } + pluginClasspath
 
-    return PluginCliParser.loadPluginsSafe(pluginClasspath, listOf(), listOf(), configuration)
+    val rootDisposable = Disposer.newDisposable()
+    try {
+        return PluginCliParser.loadPluginsSafe(pluginClasspath, listOf(), listOf(), configuration, rootDisposable)
+    } finally {
+        rootDisposable.dispose()
+    }
 }
 

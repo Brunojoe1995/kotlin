@@ -189,7 +189,7 @@ abstract class CLICompiler<A : CommonCompilerArguments> {
 
     protected abstract fun MutableList<String>.addPlatformOptions(arguments: A)
 
-    protected fun loadPlugins(paths: KotlinPaths?, arguments: A, configuration: CompilerConfiguration): ExitCode {
+    protected fun loadPlugins(paths: KotlinPaths?, arguments: A, configuration: CompilerConfiguration, rootDisposable: Disposable): ExitCode {
         val pluginClasspaths = arguments.pluginClasspaths.orEmpty().toMutableList()
         val pluginOptions = arguments.pluginOptions.orEmpty().toMutableList()
         val pluginConfigurations = arguments.pluginConfigurations.orEmpty().toMutableList()
@@ -233,7 +233,7 @@ abstract class CLICompiler<A : CommonCompilerArguments> {
             return INTERNAL_ERROR
         }
 
-        return PluginCliParser.loadPluginsSafe(pluginClasspaths, pluginOptions, pluginConfigurations, configuration)
+        return PluginCliParser.loadPluginsSafe(pluginClasspaths, pluginOptions, pluginConfigurations, configuration, rootDisposable)
     }
 
     private fun tryLoadScriptingPluginFromCurrentClassLoader(
