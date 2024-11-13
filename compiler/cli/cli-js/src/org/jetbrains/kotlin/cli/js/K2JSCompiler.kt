@@ -654,7 +654,7 @@ fun RuntimeDiagnostic.Companion.resolve(
     }
 }
 
-fun loadPluginsForTests(configuration: CompilerConfiguration): ExitCode {
+fun loadPluginsForTests(configuration: CompilerConfiguration, parentDisposable: Disposable): ExitCode {
     var pluginClasspath: Iterable<String> = emptyList()
     val kotlinPaths = PathUtil.kotlinPathsForCompiler
     val libPath = kotlinPaths.libPath.takeIf { it.exists() && it.isDirectory } ?: File(".")
@@ -662,11 +662,6 @@ fun loadPluginsForTests(configuration: CompilerConfiguration): ExitCode {
         PathUtil.KOTLIN_SCRIPTING_PLUGIN_CLASSPATH_JARS.map { File(libPath, it) }.partition { it.exists() }
     pluginClasspath = jars.map { it.canonicalPath } + pluginClasspath
 
-    val rootDisposable = Disposer.newDisposable()
-    try {
-        return PluginCliParser.loadPluginsSafe(pluginClasspath, listOf(), listOf(), configuration, rootDisposable)
-    } finally {
-        rootDisposable.dispose()
-    }
+    return PluginCliParser.loadPluginsSafe(pluginClasspath, listOf(), listOf(), configuration, parentDisposable)
 }
 
