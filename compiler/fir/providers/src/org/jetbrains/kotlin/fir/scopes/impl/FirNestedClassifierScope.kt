@@ -11,6 +11,7 @@ import org.jetbrains.kotlin.fir.declarations.FirRegularClass
 import org.jetbrains.kotlin.fir.declarations.FirTypeAlias
 import org.jetbrains.kotlin.fir.declarations.FirTypeParameterRef
 import org.jetbrains.kotlin.fir.declarations.utils.classId
+import org.jetbrains.kotlin.fir.declarations.utils.isInner
 import org.jetbrains.kotlin.fir.declarations.utils.isLocal
 import org.jetbrains.kotlin.fir.resolve.ScopeSession
 import org.jetbrains.kotlin.fir.resolve.substitution.ConeSubstitutor
@@ -21,8 +22,10 @@ import org.jetbrains.kotlin.fir.scopes.withReplacedSessionOrNull
 import org.jetbrains.kotlin.fir.symbols.ConeTypeParameterLookupTag
 import org.jetbrains.kotlin.fir.symbols.impl.FirClassLikeSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirClassifierSymbol
+import org.jetbrains.kotlin.fir.symbols.impl.FirNamedFunctionSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirRegularClassSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirTypeParameterSymbol
+import org.jetbrains.kotlin.fir.symbols.impl.FirVariableSymbol
 import org.jetbrains.kotlin.fir.types.ConeTypeParameterType
 import org.jetbrains.kotlin.fir.types.impl.ConeTypeParameterTypeImpl
 import org.jetbrains.kotlin.name.Name
@@ -58,6 +61,40 @@ abstract class FirNestedClassifierScope(val klass: FirClass, val useSiteSession:
 
     @DelicateScopeAPI
     abstract override fun withReplacedSessionOrNull(newSession: FirSession, newScopeSession: ScopeSession): FirNestedClassifierScope?
+}
+
+class FirNonStaticClassifierScope(private val delegateScope: FirContainingNamesAwareScope) : FirContainingNamesAwareScope() {
+    // We want to *avoid* delegation to certain scope functions, so we delegate explicitly instead of using
+    // `FirDelegatingContainingNamesAwareScope`.
+
+    override fun processClassifiersByNameWithSubstitution(name: Name, processor: (FirClassifierSymbol<*>, ConeSubstitutor) -> Unit) {
+        delegateScope.processClassifiersByNameWithSubstitution(name) { symbol, substitutor ->
+            if (symbol is FirClassLikeSymbol && symbol.isInner) {
+                processor(symbol, substitutor)
+            }
+        }
+    }
+
+    override fun processFunctionsByName(name: Name, processor: (FirNamedFunctionSymbol) -> Unit) {
+    }
+
+    override fun processPropertiesByName(name: Name, processor: (FirVariableSymbol<*>) -> Unit) {
+    }
+
+
+    override fun getCallableNames(): Set<Name> = emptySet()
+
+    override fun getClassifierNames(): Set<Name> {
+        return delegateScope.getClassifierNames()
+    }
+
+    override val scopeOwnerLookupNames: List<String>
+        get() = delegateScope.scopeOwnerLookupNames
+
+    @DelicateScopeAPI
+    override fun withReplacedSessionOrNull(newSession: FirSession, newScopeSession: ScopeSession): FirNonStaticClassifierScope? {
+        return delegateScope.withReplacedSessionOrNull(newSession, newScopeSession)?.let { FirNonStaticClassifierScope(it) }
+    }
 }
 
 class FirNestedClassifierScopeImpl(klass: FirClass, useSiteSession: FirSession) : FirNestedClassifierScope(klass, useSiteSession) {

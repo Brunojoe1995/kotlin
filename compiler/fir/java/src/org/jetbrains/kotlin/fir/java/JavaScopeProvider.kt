@@ -217,6 +217,18 @@ object JavaScopeProvider : FirScopeProvider() {
             (klass as FirJavaClass).existingNestedClassifierNames
         )
     }
+
+    override fun getStaticClassifierScope(
+        klass: FirClass,
+        useSiteSession: FirSession,
+        scopeSession: ScopeSession
+    ): FirContainingNamesAwareScope? {
+        return lazyNestedClassifierScope(
+            useSiteSession,
+            klass.classId,
+            (klass as FirJavaClass).existingNestedClassifierNames
+        )?.let { FirStaticScope(it) }
+    }
 }
 
 private val JAVA_SYNTHETIC_FOR_ANNOTATIONS = scopeSessionKey<FirRegularClassSymbol, JavaAnnotationSyntheticPropertiesScope>()

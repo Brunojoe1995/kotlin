@@ -30,7 +30,19 @@ abstract class FirScopeProvider {
         scopeSession: ScopeSession
     ): FirContainingNamesAwareScope?
 
+    /**
+     * @return nested classifier scope containing both static and non-static (aka inner) classifiers
+     */
     abstract fun getNestedClassifierScope(
+        klass: FirClass,
+        useSiteSession: FirSession,
+        scopeSession: ScopeSession
+    ): FirContainingNamesAwareScope?
+
+    /**
+     * @return nested classifier scope containing only static (non-inner) classifiers
+     */
+    abstract fun getStaticClassifierScope(
         klass: FirClass,
         useSiteSession: FirSession,
         scopeSession: ScopeSession
@@ -58,7 +70,7 @@ abstract class FirScopeProvider {
         scopeSession: ScopeSession,
         callableMemberScope: (FirClass, FirSession, ScopeSession) -> FirContainingNamesAwareScope?
     ): FirContainingNamesAwareScope? {
-        val nestedClassifierScope = getNestedClassifierScope(klass, useSiteSession, scopeSession)
+        val nestedClassifierScope = getStaticClassifierScope(klass, useSiteSession, scopeSession)
         val callableScope = callableMemberScope(klass, useSiteSession, scopeSession)
 
         return when {

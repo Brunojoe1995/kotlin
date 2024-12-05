@@ -38,4 +38,10 @@ object StubFirScopeProvider : FirScopeProvider() {
         useSiteSession: FirSession,
         scopeSession: ScopeSession,
     ): FirContainingNamesAwareScope? = null
+
+    override fun getStaticClassifierScope(
+        klass: FirClass,
+        useSiteSession: FirSession,
+        scopeSession: ScopeSession
+    ): FirContainingNamesAwareScope? = null
 }

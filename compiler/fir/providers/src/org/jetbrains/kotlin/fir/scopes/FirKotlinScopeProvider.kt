@@ -134,6 +134,14 @@ class FirKotlinScopeProvider(
         return useSiteSession.nestedClassifierScope(klass)
     }
 
+    override fun getStaticClassifierScope(
+        klass: FirClass,
+        useSiteSession: FirSession,
+        scopeSession: ScopeSession
+    ): FirContainingNamesAwareScope? {
+        return useSiteSession.nestedClassifierScope(klass)?.let { FirStaticScope(it) }
+    }
+
     class PlatformDependentFilteringScope(
         val declaredMemberScope: FirContainingNamesAwareScope,
         val session: FirSession,

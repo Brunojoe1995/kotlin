@@ -123,6 +123,12 @@ abstract class AbstractPartialRawFirBuilderTestCase : AbstractAnalysisApiBasedTe
                 useSiteSession: FirSession,
                 scopeSession: ScopeSession,
             ): FirContainingNamesAwareScope = shouldNotBeCalled()
+
+            override fun getStaticClassifierScope(
+                klass: FirClass,
+                useSiteSession: FirSession,
+                scopeSession: ScopeSession
+            ): FirContainingNamesAwareScope? = shouldNotBeCalled()
         }
 
         val session = FirSessionFactoryHelper.createEmptySession()

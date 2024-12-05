@@ -303,6 +303,12 @@ class LLStandaloneFirElementByPsiElementChooser : LLFirElementByPsiElementChoose
             scopeSession: ScopeSession
         ): FirContainingNamesAwareScope = shouldNotBeCalled()
 
+        override fun getStaticClassifierScope(
+            klass: FirClass,
+            useSiteSession: FirSession,
+            scopeSession: ScopeSession
+        ): FirContainingNamesAwareScope? = shouldNotBeCalled()
+
         private fun shouldNotBeCalled(): Nothing = error("Should not be called in RawFirBuilder while converting KtTypeReference")
     }
 }
