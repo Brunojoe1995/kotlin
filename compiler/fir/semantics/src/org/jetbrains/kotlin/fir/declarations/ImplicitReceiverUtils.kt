@@ -8,14 +8,15 @@ package org.jetbrains.kotlin.fir.declarations
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
-import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.resolve.*
 import org.jetbrains.kotlin.fir.resolve.calls.*
 import org.jetbrains.kotlin.fir.scopes.FirContainingNamesAwareScope
 import org.jetbrains.kotlin.fir.scopes.FirScope
 import org.jetbrains.kotlin.fir.scopes.FirTypeScope
 import org.jetbrains.kotlin.fir.scopes.impl.FirLocalScope
+import org.jetbrains.kotlin.fir.scopes.impl.nestedClassifierScope
 import org.jetbrains.kotlin.fir.scopes.impl.wrapNestedClassifierScopeWithSubstitutionForSuperType
+import org.jetbrains.kotlin.fir.scopes.staticScope
 import org.jetbrains.kotlin.fir.symbols.impl.FirClassSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirRegularClassSymbol
 import org.jetbrains.kotlin.fir.types.ConeErrorType
@@ -71,7 +72,9 @@ fun SessionHolder.collectTowerDataElementsForClass(owner: FirClass, defaultType:
     return TowerElementsForClass(
         thisReceiver,
         contextReceivers,
-        owner.staticScope(this),
+        // ????
+        session.nestedClassifierScope(owner),
+        //owner.staticScope(this),
         companionReceiver,
         companionObject?.staticScope(this),
         superClassesStaticsAndCompanionReceivers.asReversed(),
@@ -333,9 +336,6 @@ fun FirClassSymbol<*>.staticScope(sessionHolder: SessionHolder): FirContainingNa
 
 fun FirClass.staticScope(sessionHolder: SessionHolder): FirContainingNamesAwareScope? =
     staticScope(sessionHolder.session, sessionHolder.scopeSession)
-
-fun FirClass.staticScope(session: FirSession, scopeSession: ScopeSession): FirContainingNamesAwareScope? =
-    scopeProvider.getStaticScope(this, session, scopeSession)
 
 typealias ContextReceiverGroup = List<ContextReceiverValue>
 typealias ContextParameterGroup = List<ImplicitContextParameterValue>

@@ -83,3 +83,6 @@ abstract class FirScopeProvider {
 
 fun FirClass.staticScopeForBackend(session: FirSession, scopeSession: ScopeSession): FirContainingNamesAwareScope? =
     scopeProvider.getStaticScopeForBackend(this, session, scopeSession)
+
+fun FirClass.staticScope(session: FirSession, scopeSession: ScopeSession): FirContainingNamesAwareScope? =
+    scopeProvider.getStaticScope(this, session, scopeSession)

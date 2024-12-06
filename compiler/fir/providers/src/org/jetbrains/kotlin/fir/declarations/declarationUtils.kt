@@ -25,6 +25,7 @@ import org.jetbrains.kotlin.util.PrivateForInline
 fun FirClass.constructors(session: FirSession): List<FirConstructorSymbol> {
     val result = mutableListOf<FirConstructorSymbol>()
     session.declaredMemberScope(this, memberRequiredPhase = null).processDeclaredConstructors { result += it }
+//    this.staticScope(session, ScopeSession())?.processDeclaredConstructors { result += it }
     return result
 }
 

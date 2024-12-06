@@ -27,7 +27,7 @@ import org.jetbrains.kotlin.fir.resolve.transformers.ReturnTypeCalculator
 /**
  * This class is assumed to be read-only (all the modifications are assumed to happen on CheckerContextForProvider side)
  */
-abstract class CheckerContext : DiagnosticContext {
+abstract class CheckerContext : DiagnosticContext, SessionHolder {
     // Services
     abstract val sessionHolder: SessionHolder
     abstract val returnTypeCalculator: ReturnTypeCalculator
@@ -50,10 +50,10 @@ abstract class CheckerContext : DiagnosticContext {
     abstract val allWarningsSuppressed: Boolean
     abstract val allErrorsSuppressed: Boolean
 
-    val session: FirSession
+    override val session: FirSession
         get() = sessionHolder.session
 
-    val scopeSession: ScopeSession
+    override val scopeSession: ScopeSession
         get() = sessionHolder.scopeSession
 
     override fun isDiagnosticSuppressed(diagnostic: KtDiagnostic): Boolean {
