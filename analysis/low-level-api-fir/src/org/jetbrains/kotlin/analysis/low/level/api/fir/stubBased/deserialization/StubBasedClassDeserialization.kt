@@ -289,6 +289,8 @@ private fun KotlinClassStubImpl.deserializeValueClassRepresentation(klass: FirRe
 
             MultiFieldValueClassRepresentation(mapping)
         }
+
+        KotlinValueClassRepresentation.VALHALLA_VALUE_CLASS -> ValhallaValueClassRepresentation()
     }
 }
 
