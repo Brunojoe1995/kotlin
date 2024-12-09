@@ -3952,6 +3952,10 @@ sealed interface KaFirDiagnostic<PSI : PsiElement> : KaDiagnosticWithPsi<PSI> {
         val currentTargetJvmVersion: String
     }
 
+    interface ValhallaValueClassWithoutJvmPreview : KaFirDiagnostic<PsiElement> {
+        override val diagnosticClass get() = ValhallaValueClassWithoutJvmPreview::class
+    }
+
     interface JvmInlineWithoutValueClass : KaFirDiagnostic<PsiElement> {
         override val diagnosticClass get() = JvmInlineWithoutValueClass::class
     }
