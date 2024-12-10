@@ -32,11 +32,11 @@ class FirClassDeclaredMemberScopeImpl(
     private val klass: FirClass,
     private val existingNamesForLazyNestedClassifierScope: List<Name>?,
 ) : FirClassDeclaredMemberScope(klass.classId) {
-    private val nonStaticClassifierScope: FirContainingNamesAwareScope? = if (existingNamesForLazyNestedClassifierScope != null) {
+    private val innerClassifierScope: FirContainingNamesAwareScope? = if (existingNamesForLazyNestedClassifierScope != null) {
         lazyNestedClassifierScope(useSiteSession, klass.symbol.classId, existingNamesForLazyNestedClassifierScope)
     } else {
         useSiteSession.nestedClassifierScope(klass)
-    }?.let { FirNonStaticClassifierScope(it) }
+    }?.let { FirInnerClassifierScope(it) }
 
     private val callablesIndex: Map<Name, List<FirCallableSymbol<*>>> = run {
         val result = mutableMapOf<Name, MutableList<FirCallableSymbol<*>>>()
@@ -88,7 +88,7 @@ class FirClassDeclaredMemberScopeImpl(
         name: Name,
         processor: (FirClassifierSymbol<*>, ConeSubstitutor) -> Unit
     ) {
-        nonStaticClassifierScope?.processClassifiersByNameWithSubstitution(name, processor)
+        innerClassifierScope?.processClassifiersByNameWithSubstitution(name, processor)
     }
 
     override fun getCallableNames(): Set<Name> {
@@ -96,7 +96,7 @@ class FirClassDeclaredMemberScopeImpl(
     }
 
     override fun getClassifierNames(): Set<Name> {
-        return nonStaticClassifierScope?.getClassifierNames().orEmpty()
+        return innerClassifierScope?.getClassifierNames().orEmpty()
     }
 
     @DelicateScopeAPI

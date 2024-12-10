@@ -63,7 +63,7 @@ abstract class FirNestedClassifierScope(val klass: FirClass, val useSiteSession:
     abstract override fun withReplacedSessionOrNull(newSession: FirSession, newScopeSession: ScopeSession): FirNestedClassifierScope?
 }
 
-class FirNonStaticClassifierScope(private val delegateScope: FirContainingNamesAwareScope) : FirContainingNamesAwareScope() {
+class FirInnerClassifierScope(private val delegateScope: FirContainingNamesAwareScope) : FirContainingNamesAwareScope() {
     // We want to *avoid* delegation to certain scope functions, so we delegate explicitly instead of using
     // `FirDelegatingContainingNamesAwareScope`.
 
@@ -92,8 +92,8 @@ class FirNonStaticClassifierScope(private val delegateScope: FirContainingNamesA
         get() = delegateScope.scopeOwnerLookupNames
 
     @DelicateScopeAPI
-    override fun withReplacedSessionOrNull(newSession: FirSession, newScopeSession: ScopeSession): FirNonStaticClassifierScope? {
-        return delegateScope.withReplacedSessionOrNull(newSession, newScopeSession)?.let { FirNonStaticClassifierScope(it) }
+    override fun withReplacedSessionOrNull(newSession: FirSession, newScopeSession: ScopeSession): FirInnerClassifierScope? {
+        return delegateScope.withReplacedSessionOrNull(newSession, newScopeSession)?.let { FirInnerClassifierScope(it) }
     }
 }
 
