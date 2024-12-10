@@ -19,7 +19,7 @@ private const val MONOTONIC = 1
 @WasmImport("wasi_snapshot_preview1", "clock_time_get")
 private external fun wasiRawClockTimeGet(clockId: Int, precision: Long, resultPtr: Int): Int
 
-private fun clockTimeGet(): Long = withScopedMemoryAllocator { allocator ->
+internal fun clockTimeGet(): Long = withScopedMemoryAllocator { allocator ->
     val rp0 = allocator.allocate(8)
     val ret = wasiRawClockTimeGet(
         clockId = MONOTONIC,
