@@ -97,8 +97,7 @@ private abstract class BaseInteropIrTransformer(
         return result
     }
 
-    protected inline fun generateExpressionWithStubs(
-            parent: IrDeclarationParent,
+    protected inline fun IrBuilderWithScope.generateExpressionWithStubs(
             element: IrElement? = null,
             block: KotlinStubs.() -> IrExpression
     ): IrExpression {
@@ -109,17 +108,13 @@ private abstract class BaseInteropIrTransformer(
         }.block()
         return if (addedDeclarations.isEmpty())
             result
-        else IrBlockImpl(
-                startOffset = element?.startOffset ?: UNDEFINED_OFFSET,
-                endOffset = element?.endOffset ?: UNDEFINED_OFFSET,
-                type = result.type,
-        ).apply {
+        else irBlock {
             addedDeclarations.forEach {
                 it.transform(this@BaseInteropIrTransformer, null)
                 (it as? IrDeclarationWithVisibility)?.visibility = DescriptorVisibilities.LOCAL
-                statements += it
+                +it
             }
-            statements += result
+            +result
         }
     }
 
@@ -703,7 +698,7 @@ private class InteropTransformerPart1(
             arguments: List<IrExpression?>,
             call: IrFunctionAccessExpression,
             method: IrSimpleFunction
-    ): IrExpression = generateExpressionWithStubs(this.parent, call) {
+    ): IrExpression = generateExpressionWithStubs(call) {
         if (method.parent !is IrClass) {
             // Category-provided.
             generationState.dependenciesTracker.add(method)
@@ -912,7 +907,7 @@ private class InteropTransformerPart2(
     }
 
     private fun generateCFunctionPointer(function: IrSimpleFunction, expression: IrExpression): IrExpression =
-            generateExpressionWithStubs(builder.parent) { generateCFunctionPointer(function, function, expression) }
+            builder.generateExpressionWithStubs { generateCFunctionPointer(function, function, expression) }
 
     // ?.foo() part
     fun IrBuilderWithScope.irSafeCall(extensionReceiverExpression: IrExpression, typeArguments: List<IrTypeArgument>, callee: IrSimpleFunctionSymbol): IrExpression =
@@ -1110,7 +1105,7 @@ private class InteropTransformerPart2(
         val exceptionMode = ForeignExceptionMode.byValue(
                 function.konanLibrary?.manifestProperties?.getProperty(ForeignExceptionMode.manifestKey)
         )
-        return generateExpressionWithStubs(builder.parent, expression) { generateCCall(expression, builder, isInvoke = false, exceptionMode) }
+        return builder.generateExpressionWithStubs(expression) { generateCCall(expression, builder, isInvoke = false, exceptionMode) }
     }
 
     override fun visitCall(expression: IrCall): IrExpression {
@@ -1215,7 +1210,7 @@ private class InteropTransformerPart2(
                         pointer
                 }
                 IntrinsicType.INTEROP_FUNPTR_INVOKE -> {
-                    generateExpressionWithStubs(builder.parent) { generateCCall(expression, builder, isInvoke = true) }
+                    builder.generateExpressionWithStubs { generateCCall(expression, builder, isInvoke = true) }
                 }
                 IntrinsicType.INTEROP_SIGN_EXTEND, IntrinsicType.INTEROP_NARROW -> {
 
