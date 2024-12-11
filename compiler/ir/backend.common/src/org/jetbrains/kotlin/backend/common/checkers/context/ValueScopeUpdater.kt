@@ -68,7 +68,9 @@ internal object ValueScopeUpdater : ContextUpdater {
             context.withScopeOwner(declaration, block) {
                 // A function parameter's default value may reference the parameters that come after it,
                 // so we add all the parameters to the scope manually before validating any of them
-                declaration.valueParameters.mapTo(this, IrValueParameter::symbol)
+                declaration.parameters
+                    .filter { it.kind == IrParameterKind.Regular || it.kind == IrParameterKind.Context }
+                    .mapTo(this, IrValueParameter::symbol)
             }
         }
 
