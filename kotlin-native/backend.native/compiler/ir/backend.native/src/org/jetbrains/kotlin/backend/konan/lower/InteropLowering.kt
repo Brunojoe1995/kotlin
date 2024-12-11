@@ -272,8 +272,9 @@ private class InteropLoweringPart1(val generationState: NativeGenerationState) :
     override fun lower(irFile: IrFile) {
         val transformer = InteropTransformerPart1(generationState, irFile, irFile.uniqueName)
         irFile.transformChildrenVoid(transformer)
-        val eagerTopLevelInitializers = transformer.eagerTopLevelInitializers
-        eagerTopLevelInitializers.forEach { irFile.addTopLevelInitializer(it, threadLocal = false, eager = true) }
+        transformer.eagerTopLevelInitializersForObjCClasses.forEach {
+            irFile.addTopLevelInitializer(it, threadLocal = false, eager = true)
+        }
     }
 
     override fun lower(irBody: IrBody, container: IrDeclaration) {
@@ -283,7 +284,7 @@ private class InteropLoweringPart1(val generationState: NativeGenerationState) :
                 getUniqueName(container.getPackageFragment(), context.irLinker.getExternalDeclarationFileName(container))
         )
         container.transform(transformer, null)
-        require(transformer.eagerTopLevelInitializers.isEmpty()) { "A local Obj-C class in an inline function is not supported" }
+        require(transformer.eagerTopLevelInitializersForObjCClasses.isEmpty()) { "A local Obj-C class in an inline function is not supported" }
     }
 
     private fun IrFile.addTopLevelInitializer(expression: IrExpression, threadLocal: Boolean, eager: Boolean) {
@@ -318,7 +319,7 @@ private class InteropTransformerPart1(
         irFile: IrFile?,
         uniqueName: String,
 ) : BaseInteropIrTransformer(generationState, irFile, uniqueName) {
-    val eagerTopLevelInitializers = mutableListOf<IrExpression>()
+    val eagerTopLevelInitializersForObjCClasses = mutableListOf<IrExpression>()
 
     private fun IrBuilderWithScope.callAlloc(classPtr: IrExpression): IrExpression =
             irCall(symbols.interopAllocObjCObject).apply {
@@ -360,7 +361,7 @@ private class InteropTransformerPart1(
 
         if (irClass.annotations.hasAnnotation(InteropFqNames.exportObjCClass)) {
             val irBuilder = context.createIrBuilder(irClass.symbol).at(irClass)
-            eagerTopLevelInitializers.add(irBuilder.getObjCClass(symbols, irClass.symbol))
+            eagerTopLevelInitializersForObjCClasses.add(irBuilder.getObjCClass(symbols, irClass.symbol))
         }
     }
 
