@@ -360,7 +360,9 @@ private class InteropTransformerPart1(
         }.let { irClass.addChildren(it) }
 
         if (irClass.annotations.hasAnnotation(InteropFqNames.exportObjCClass)) {
-            val irBuilder = context.createIrBuilder(irClass.symbol).at(irClass)
+            val irBuilder = context.createIrBuilder(
+                    irFile?.symbol ?: error("No file was supplied while lowering ${irClass.render()}")
+            ).at(irClass)
             eagerTopLevelInitializersForObjCClasses.add(irBuilder.getObjCClass(symbols, irClass.symbol))
         }
     }
