@@ -1111,35 +1111,95 @@ private class InteropTransformerPart2(
         return builder.generateExpressionWithStubs(expression) { generateCCall(expression, builder, isInvoke = false, exceptionMode) }
     }
 
-    override fun visitCall(expression: IrCall): IrExpression {
-        val intrinsicType = tryGetIntrinsicType(expression)
-        if (intrinsicType == IntrinsicType.OBJC_INIT_BY) {
-            // Need to do this separately as otherwise [expression.transformChildrenVoid(this)] would be called
-            // and the [IrConstructorCall] would be transformed which is not what we want.
+    private fun lowerObjCInitBy(expression: IrCall): IrExpression {
+        val argument = expression.getValueArgument(0)!!
+        require(argument is IrConstructorCall) { renderCompilerError(argument) }
 
-            val argument = expression.getValueArgument(0)!!
-            require(argument is IrConstructorCall) { renderCompilerError(argument) }
+        val constructedClass = argument.symbol.owner.constructedClass
 
-            val constructedClass = argument.symbol.owner.constructedClass
+        val extensionReceiver = expression.extensionReceiver!!
+        require(extensionReceiver is IrGetValue &&
+                extensionReceiver.symbol.owner.isDispatchReceiverFor(constructedClass)) { renderCompilerError(extensionReceiver) }
 
-            val extensionReceiver = expression.extensionReceiver!!
-            require(extensionReceiver is IrGetValue &&
-                    extensionReceiver.symbol.owner.isDispatchReceiverFor(constructedClass)) { renderCompilerError(extensionReceiver) }
+        argument.transformChildrenVoid(this)
 
-            argument.transformChildrenVoid(this)
-
-            return builder.at(expression).irBlock {
-                val instance = extensionReceiver.symbol.owner
-                +irCall(symbols.initInstance).apply {
-                    putValueArgument(0, irGet(instance))
-                    putValueArgument(1, argument)
-                }
-                +irGet(instance)
+        return builder.at(expression).irBlock {
+            val instance = extensionReceiver.symbol.owner
+            +irCall(symbols.initInstance).apply {
+                putValueArgument(0, irGet(instance))
+                putValueArgument(1, argument)
             }
+            +irGet(instance)
+        }
+    }
+
+    private fun lowerStaticCFunction(expression: IrCall): IrExpression {
+        val staticFunctionArgument = unwrapStaticFunctionArgument(expression.getValueArgument(0)!!)
+        require(staticFunctionArgument != null && staticFunctionArgument.function is IrSimpleFunction) { renderCompilerError(expression) }
+        val targetSymbol = staticFunctionArgument.function.symbol
+        val target = targetSymbol.owner
+        val signatureTypes = target.allParameters.map { it.type } + target.returnType
+
+        expression.symbol.owner.typeParameters.indices.forEach { index ->
+            val typeArgument = expression.getTypeArgument(index)!!.toKotlinType()
+            val signatureType = signatureTypes[index].toKotlinType()
+
+            require(typeArgument.constructor == signatureType.constructor &&
+                    typeArgument.isMarkedNullable == signatureType.isMarkedNullable) { renderCompilerError(expression) }
         }
 
-        if (intrinsicType != IntrinsicType.INTEROP_STATIC_C_FUNCTION && intrinsicType != IntrinsicType.WORKER_EXECUTE)
-            expression.transformChildrenVoid(this)
+        builder.at(expression)
+        val pointer = generateCFunctionPointer(target, expression)
+        return if (staticFunctionArgument.defined)
+            builder.irBlock {
+                +staticFunctionArgument.function
+                +pointer
+            }
+        else
+            pointer
+    }
+
+    private fun lowerWorkerExecute(expression: IrCall): IrExpression {
+        val staticFunctionArgument = unwrapStaticFunctionArgument(expression.getValueArgument(2)!!)
+        require(staticFunctionArgument != null) { renderCompilerError(expression) }
+
+        builder.at(expression)
+        val targetSymbol = staticFunctionArgument.function.symbol
+        val jobPointer = IrRawFunctionReferenceImpl(
+                builder.startOffset, builder.endOffset,
+                symbols.executeImpl.owner.valueParameters[3].type,
+                targetSymbol)
+
+        val executeImplCall = builder.irCall(symbols.executeImpl).apply {
+            putValueArgument(0, expression.dispatchReceiver)
+            putValueArgument(1, expression.getValueArgument(0))
+            putValueArgument(2, expression.getValueArgument(1))
+            putValueArgument(3, jobPointer)
+        }
+        executeImplCall.transformChildrenVoid()
+
+        builder.at(expression)
+        return if (staticFunctionArgument.defined)
+            builder.irBlock {
+                +staticFunctionArgument.function
+                +executeImplCall
+            }
+        else
+            executeImplCall
+    }
+
+    override fun visitCall(expression: IrCall): IrExpression {
+        val intrinsicType = tryGetIntrinsicType(expression)
+        // Need to do these intrinsics separately as otherwise [expression.transformChildrenVoid(this)] would be called
+        // and some of the child nodes would be transformed which is not what we want.
+        when (intrinsicType) {
+            IntrinsicType.OBJC_INIT_BY -> return lowerObjCInitBy(expression)
+            IntrinsicType.INTEROP_STATIC_C_FUNCTION -> return lowerStaticCFunction(expression)
+            IntrinsicType.WORKER_EXECUTE -> return lowerWorkerExecute(expression)
+            else -> Unit
+        }
+
+        expression.transformChildrenVoid(this)
         builder.at(expression)
         val function = expression.symbol.owner
 
@@ -1187,30 +1247,6 @@ private class InteropTransformerPart2(
                     } else {
                         expression
                     }
-                }
-                IntrinsicType.INTEROP_STATIC_C_FUNCTION -> {
-                    val staticFunctionArgument = unwrapStaticFunctionArgument(expression.getValueArgument(0)!!)
-                    require(staticFunctionArgument != null && staticFunctionArgument.function is IrSimpleFunction) { renderCompilerError(expression) }
-                    val targetSymbol = staticFunctionArgument.function.symbol
-                    val target = targetSymbol.owner
-                    val signatureTypes = target.allParameters.map { it.type } + target.returnType
-
-                    function.typeParameters.indices.forEach { index ->
-                        val typeArgument = expression.getTypeArgument(index)!!.toKotlinType()
-                        val signatureType = signatureTypes[index].toKotlinType()
-
-                        require(typeArgument.constructor == signatureType.constructor &&
-                                typeArgument.isMarkedNullable == signatureType.isMarkedNullable) { renderCompilerError(expression) }
-                    }
-
-                    val pointer = generateCFunctionPointer(target, expression)
-                    if (staticFunctionArgument.defined)
-                        builder.irBlock {
-                            +staticFunctionArgument.function
-                            +pointer
-                        }
-                    else
-                        pointer
                 }
                 IntrinsicType.INTEROP_FUNPTR_INVOKE -> {
                     builder.generateExpressionWithStubs { generateCCall(expression, builder, isInvoke = true) }
@@ -1274,30 +1310,6 @@ private class InteropTransformerPart2(
                     } else {
                         builder.irConvertInteger(source, target, valueToConvert)
                     }
-                }
-                IntrinsicType.WORKER_EXECUTE -> {
-                    val staticFunctionArgument = unwrapStaticFunctionArgument(expression.getValueArgument(2)!!)
-                    require(staticFunctionArgument != null) { renderCompilerError(expression) }
-                    val targetSymbol = staticFunctionArgument.function.symbol
-                    val jobPointer = IrRawFunctionReferenceImpl(
-                            builder.startOffset, builder.endOffset,
-                            symbols.executeImpl.owner.valueParameters[3].type,
-                            targetSymbol)
-
-                    val executeImplCall = builder.irCall(symbols.executeImpl).apply {
-                        putValueArgument(0, expression.dispatchReceiver)
-                        putValueArgument(1, expression.getValueArgument(0))
-                        putValueArgument(2, expression.getValueArgument(1))
-                        putValueArgument(3, jobPointer)
-                    }
-                    executeImplCall.transformChildrenVoid()
-                    if (staticFunctionArgument.defined)
-                        builder.irBlock {
-                            +staticFunctionArgument.function
-                            +executeImplCall
-                        }
-                    else
-                        executeImplCall
                 }
                 else -> expression
             }
