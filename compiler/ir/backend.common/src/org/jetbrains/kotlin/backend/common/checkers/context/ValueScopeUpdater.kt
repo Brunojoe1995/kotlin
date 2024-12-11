@@ -12,6 +12,7 @@ import org.jetbrains.kotlin.ir.declarations.IrDeclaration
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationBase
 import org.jetbrains.kotlin.ir.declarations.IrField
 import org.jetbrains.kotlin.ir.declarations.IrFunction
+import org.jetbrains.kotlin.ir.declarations.IrParameterKind
 import org.jetbrains.kotlin.ir.declarations.IrScript
 import org.jetbrains.kotlin.ir.declarations.IrValueDeclaration
 import org.jetbrains.kotlin.ir.declarations.IrValueParameter
@@ -94,7 +95,9 @@ internal object ValueScopeUpdater : ContextUpdater {
         }
 
         private fun MutableSet<IrValueSymbol>.addValueParametersOfPrimaryConstructor(declaration: IrDeclaration) {
-            (declaration.parent as? IrClass)?.primaryConstructor?.valueParameters?.mapTo(this, IrValueParameter::symbol)
+            (declaration.parent as? IrClass)?.primaryConstructor?.parameters
+                ?.filter { it.kind == IrParameterKind.Regular || it.kind == IrParameterKind.Context }
+                ?.mapTo(this, IrValueParameter::symbol)
         }
     }
 }
