@@ -176,6 +176,9 @@ private abstract class BaseInteropIrTransformer(
     protected fun renderCompilerError(element: IrElement?, message: String = "Failed requirement") =
             renderCompilerError(irFile, element, message)
 
+    // The trick here is to try building a trampoline to the referenced function and see if it gets lowered:
+    // if it doesn't, then no trampoline is needed and the reference can be left as is; otherwise, the trampoline
+    // is indeed needed and the original reference is replaced to a reference to the trampoline (already lowered).
     override fun visitFunctionReference(expression: IrFunctionReference): IrExpression {
         expression.transformChildrenVoid()
 
