@@ -97,7 +97,7 @@ private abstract class BaseInteropIrTransformer(
         return result
     }
 
-    protected inline fun generateWithStubs(
+    protected inline fun generateExpressionWithStubs(
             parent: IrDeclarationParent,
             element: IrElement? = null,
             block: KotlinStubs.() -> IrExpression
@@ -703,7 +703,7 @@ private class InteropTransformerPart1(
             arguments: List<IrExpression?>,
             call: IrFunctionAccessExpression,
             method: IrSimpleFunction
-    ): IrExpression = generateWithStubs(this.parent, call) {
+    ): IrExpression = generateExpressionWithStubs(this.parent, call) {
         if (method.parent !is IrClass) {
             // Category-provided.
             generationState.dependenciesTracker.add(method)
@@ -912,7 +912,7 @@ private class InteropTransformerPart2(
     }
 
     private fun generateCFunctionPointer(function: IrSimpleFunction, expression: IrExpression): IrExpression =
-            generateWithStubs(builder.parent) { generateCFunctionPointer(function, function, expression) }
+            generateExpressionWithStubs(builder.parent) { generateCFunctionPointer(function, function, expression) }
 
     // ?.foo() part
     fun IrBuilderWithScope.irSafeCall(extensionReceiverExpression: IrExpression, typeArguments: List<IrTypeArgument>, callee: IrSimpleFunctionSymbol): IrExpression =
@@ -1110,7 +1110,7 @@ private class InteropTransformerPart2(
         val exceptionMode = ForeignExceptionMode.byValue(
                 function.konanLibrary?.manifestProperties?.getProperty(ForeignExceptionMode.manifestKey)
         )
-        return generateWithStubs(builder.parent, expression) { generateCCall(expression, builder, isInvoke = false, exceptionMode) }
+        return generateExpressionWithStubs(builder.parent, expression) { generateCCall(expression, builder, isInvoke = false, exceptionMode) }
     }
 
     override fun visitCall(expression: IrCall): IrExpression {
@@ -1215,7 +1215,7 @@ private class InteropTransformerPart2(
                         pointer
                 }
                 IntrinsicType.INTEROP_FUNPTR_INVOKE -> {
-                    generateWithStubs(builder.parent) { generateCCall(expression, builder, isInvoke = true) }
+                    generateExpressionWithStubs(builder.parent) { generateCCall(expression, builder, isInvoke = true) }
                 }
                 IntrinsicType.INTEROP_SIGN_EXTEND, IntrinsicType.INTEROP_NARROW -> {
 
