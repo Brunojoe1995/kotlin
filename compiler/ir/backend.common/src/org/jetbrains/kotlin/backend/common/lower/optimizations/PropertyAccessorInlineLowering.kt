@@ -165,7 +165,7 @@ open class PropertyAccessorInlineLowering(
 
             // TODO: support constant setters
             val setValue = setFieldStmt.value as? IrGetValue ?: return false
-            val valueSymbol = callee.valueParameters.single().symbol
+            val valueSymbol = callee.parameters.single { it.kind == IrParameterKind.Regular }.symbol
             if (setValue.symbol !== valueSymbol) return false
 
             val receiver = setFieldStmt.receiver
