@@ -1939,7 +1939,20 @@ internal class CodeGeneratorVisitor(
             if (!context.shouldContainLocationDebugInfo() || inlinedBlock.startOffset == UNDEFINED_OFFSET)
                 return@lazy null
 
-            val owner = inlinedBlock.inlineFunctionSymbol!!.owner
+            val owner = inlinedBlock.inlineFunctionSymbol?.owner
+            if (owner == null) {
+                @Suppress("UNCHECKED_CAST")
+                return@lazy debugInfo.diFunctionScope(
+                        inlinedBlock.fileEntry,
+                        name = "<inlined-lambda>",
+                        linkageName = "<inlined-lambda>",
+                        inlinedBlock.fileEntry.line(inlinedBlock.declarationStartOffset),
+                        debugInfo.subroutineType(debugInfo.llvmTargetData, listOf(inlinedBlock.type)),
+                        nodebug = false,
+                        isTransparentStepping = false
+                ) as DIScopeOpaqueRef
+            }
+
             require(owner is IrSimpleFunction) { "Inline constructors should've been lowered: ${owner.render()}" }
             owner.scope(fileEntry().line(inlinedBlock.declarationStartOffset))
         }
