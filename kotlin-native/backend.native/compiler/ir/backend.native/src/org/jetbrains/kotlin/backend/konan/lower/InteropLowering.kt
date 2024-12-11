@@ -72,6 +72,9 @@ private fun getUniqueName(packageFragment: IrPackageFragment, fileName: String) 
 private val IrFile.uniqueName: String
     get() = getUniqueName(this, fileEntry.name)
 
+private fun IrDeclaration.getUniqueName(context: Context) =
+        getUniqueName(this.getPackageFragment(), context.irLinker.getExternalDeclarationFileName(this))
+
 private abstract class BaseInteropIrTransformer(
         protected val generationState: NativeGenerationState,
         protected val irFile: IrFile?,
@@ -278,11 +281,7 @@ private class InteropLoweringPart1(val generationState: NativeGenerationState) :
     }
 
     override fun lower(irBody: IrBody, container: IrDeclaration) {
-        val transformer = InteropTransformerPart1(
-                generationState,
-                container.fileOrNull,
-                getUniqueName(container.getPackageFragment(), context.irLinker.getExternalDeclarationFileName(container))
-        )
+        val transformer = InteropTransformerPart1(generationState, container.fileOrNull, container.getUniqueName(context))
         container.transform(transformer, null)
         require(transformer.eagerTopLevelInitializersForObjCClasses.isEmpty()) { "A local Obj-C class in an inline function is not supported" }
     }
@@ -864,17 +863,15 @@ private class InteropTransformerPart1(
  * Lowers some interop intrinsic calls.
  */
 private class InteropLoweringPart2(val generationState: NativeGenerationState) : FileLoweringPass, BodyLoweringPass {
+    private val context = generationState.context
+
     override fun lower(irFile: IrFile) {
         val transformer = InteropTransformerPart2(generationState, irFile, irFile.uniqueName)
         irFile.transformChildrenVoid(transformer)
     }
 
     override fun lower(irBody: IrBody, container: IrDeclaration) {
-        val transformer = InteropTransformerPart2(
-                generationState,
-                container.fileOrNull,
-                getUniqueName(container.getPackageFragment(), generationState.context.irLinker.getExternalDeclarationFileName(container))
-        )
+        val transformer = InteropTransformerPart2(generationState, container.fileOrNull, container.getUniqueName(context))
         container.transform(transformer, null)
     }
 }
