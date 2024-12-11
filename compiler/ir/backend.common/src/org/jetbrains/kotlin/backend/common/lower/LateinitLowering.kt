@@ -40,11 +40,16 @@ open class LateinitLowering(
     private val loweringContext: LoweringContext,
     private val uninitializedPropertyAccessExceptionThrower: UninitializedPropertyAccessExceptionThrower,
 ) : FileLoweringPass, IrElementTransformerVoid() {
+    private val lateinitProperties = mutableSetOf<IrProperty>()
+    private val lateinitVariables = mutableSetOf<IrVariable>()
+
     constructor(loweringContext: LoweringContext) :
             this(loweringContext, UninitializedPropertyAccessExceptionThrower(loweringContext.ir.symbols))
 
     override fun lower(irFile: IrFile) {
         irFile.transformChildrenVoid(this)
+        lateinitProperties.forEach { it.isLateinit = false }
+        lateinitVariables.forEach { it.isLateinit = false }
     }
 
     fun lower(irBody: IrBody) {
@@ -53,6 +58,7 @@ open class LateinitLowering(
 
     override fun visitProperty(declaration: IrProperty): IrStatement {
         if (declaration.isRealLateinit()) {
+            lateinitProperties += declaration
             val backingField = declaration.backingField!!
             transformLateinitBackingField(backingField, declaration)
 
@@ -69,6 +75,7 @@ open class LateinitLowering(
         declaration.transformChildrenVoid()
 
         if (declaration.isLateinit) {
+            lateinitVariables += declaration
             declaration.type = declaration.type.makeNullable()
             declaration.isVar = true
             declaration.initializer =
