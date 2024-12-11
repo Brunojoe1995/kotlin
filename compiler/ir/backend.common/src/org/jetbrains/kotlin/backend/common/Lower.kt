@@ -247,7 +247,7 @@ interface DeclarationTransformer : FileLoweringPass {
         override fun visitFunction(declaration: IrFunction) {
             declaration.acceptChildrenVoid(this)
 
-            for (v in declaration.valueParameters) {
+            for (v in declaration.parameters.filter { it.kind == IrParameterKind.Regular }) {
                 val result = transformer.transformFlatRestricted(v)
                 if (result != null) error("Don't know how to add value parameters")
             }
