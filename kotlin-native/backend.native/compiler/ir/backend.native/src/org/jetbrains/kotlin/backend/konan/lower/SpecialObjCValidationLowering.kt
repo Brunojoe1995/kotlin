@@ -10,10 +10,7 @@ import org.jetbrains.kotlin.backend.konan.Context
 import org.jetbrains.kotlin.backend.konan.InteropFqNames
 import org.jetbrains.kotlin.backend.konan.reportCompilationError
 import org.jetbrains.kotlin.ir.IrElement
-import org.jetbrains.kotlin.ir.declarations.IrDeclarationBase
-import org.jetbrains.kotlin.ir.declarations.IrFile
-import org.jetbrains.kotlin.ir.declarations.IrFunction
-import org.jetbrains.kotlin.ir.declarations.IrPackageFragment
+import org.jetbrains.kotlin.ir.declarations.*
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrInlinedFunctionBlock
 import org.jetbrains.kotlin.ir.visitors.IrElementVisitorVoid
@@ -40,7 +37,11 @@ internal class SpecialObjCValidationLowering(val context: Context) : FileLowerin
                             element.acceptChildrenVoid(this)
                         }
 
-                        override fun visitDeclaration(declaration: IrDeclarationBase) {
+                        override fun visitClass(declaration: IrClass) {
+                            // Skip local declarations.
+                        }
+
+                        override fun visitFunction(declaration: IrFunction) {
                             // Skip local declarations.
                         }
 
