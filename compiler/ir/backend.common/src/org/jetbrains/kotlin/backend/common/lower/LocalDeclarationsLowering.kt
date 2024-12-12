@@ -778,11 +778,14 @@ open class LocalDeclarationsLowering(
 
             newDeclaration.parent = ownerParent
             newDeclaration.returnType = localFunctionContext.remapType(oldDeclaration.returnType)
-            newDeclaration.dispatchReceiverParameter = null
-            newDeclaration.extensionReceiverParameter = oldDeclaration.extensionReceiverParameter?.run {
-                copyTo(newDeclaration, type = localFunctionContext.remapType(this.type)).also {
-                    newParameterToOld.putAbsentOrSame(it, this)
+            val newDeclarationExtensionReceiverParameter = oldDeclaration.parameters
+                .firstOrNull { it.kind == IrParameterKind.ExtensionReceiver }?.run {
+                    copyTo(newDeclaration, type = localFunctionContext.remapType(this.type)).also {
+                        newParameterToOld.putAbsentOrSame(it, this)
+                    }
                 }
+            if (newDeclarationExtensionReceiverParameter != null) {
+                newDeclaration.parameters = newDeclaration.parameters memoryOptimizedPlus newDeclarationExtensionReceiverParameter
             }
             newDeclaration.copyAttributes(oldDeclaration)
 
