@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2021 JetBrains s.r.o. and Kotlin Programming Language contributors.
+ * Copyright 2010-2024 JetBrains s.r.o. and Kotlin Programming Language contributors.
  * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
  */
 
@@ -14,6 +14,7 @@ import org.jetbrains.kotlin.load.kotlin.header.KotlinClassHeader
 import org.jetbrains.kotlin.metadata.deserialization.MetadataVersion
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.Name
+import org.jetbrains.kotlin.utils.exceptions.rethrowIntellijPlatformExceptionIfNeeded
 
 object ClsClassFinder {
     fun findMultifileClassParts(file: VirtualFile, classId: ClassId, partNames: List<String>): List<KotlinJvmBinaryClass> {
@@ -32,7 +33,11 @@ object ClsClassFinder {
      * Checks if this file is a compiled "internal" Kotlin class, i.e. a Kotlin class (not necessarily ABI-compatible with the current plugin)
      * which should NOT be decompiled (and, as a result, shown under the library in the Project view, be searchable via Find class, etc.)
      */
-    fun isKotlinInternalCompiledFile(file: VirtualFile, fileContent: ByteArray? = null): Boolean {
+    fun isKotlinInternalCompiledFile(
+        file: VirtualFile,
+        fileContent: ByteArray? = null,
+        multifileClassPartAsInternal: Boolean = true,
+    ): Boolean {
         if (!file.isValidAndExists(fileContent)) {
             return false
         }
@@ -43,20 +48,21 @@ object ClsClassFinder {
             return false
         }
 
-        val innerClass =
-            try {
-                if (fileContent == null) {
-                    ClassFileViewProvider.isInnerClass(file)
-                } else {
-                    ClassFileViewProvider.isInnerClass(file, fileContent)
-                }
-            } catch (exception: Exception) {
-                Logger
-                    .getInstance("org.jetbrains.kotlin.analysis.decompiler.stub.file.ClsClassFinder.isKotlinInternalCompiledFile")
-                    .debug(file.path, exception)
-
-                return false
+        val innerClass = try {
+            if (fileContent == null) {
+                ClassFileViewProvider.isInnerClass(file)
+            } else {
+                ClassFileViewProvider.isInnerClass(file, fileContent)
             }
+        } catch (exception: Exception) {
+            rethrowIntellijPlatformExceptionIfNeeded(exception)
+
+            Logger
+                .getInstance("org.jetbrains.kotlin.analysis.decompiler.stub.file.ClsClassFinder.isKotlinInternalCompiledFile")
+                .debug(file.path, exception)
+
+            return false
+        }
 
         if (innerClass) {
             return true
@@ -65,8 +71,14 @@ object ClsClassFinder {
         val header = clsKotlinBinaryClassCache.getKotlinBinaryClassHeaderData(file, fileContent) ?: return false
         if (header.classId.isLocal) return true
 
-        return header.kind == KotlinClassHeader.Kind.SYNTHETIC_CLASS ||
-                header.kind == KotlinClassHeader.Kind.MULTIFILE_CLASS_PART
+        return when (header.kind) {
+            KotlinClassHeader.Kind.SYNTHETIC_CLASS, KotlinClassHeader.Kind.UNKNOWN -> true
+            KotlinClassHeader.Kind.MULTIFILE_CLASS_PART -> multifileClassPartAsInternal
+            KotlinClassHeader.Kind.CLASS,
+            KotlinClassHeader.Kind.FILE_FACADE,
+            KotlinClassHeader.Kind.MULTIFILE_CLASS,
+                -> false
+        }
     }
 
     fun isMultifileClassPartFile(file: VirtualFile, fileContent: ByteArray? = null): Boolean {

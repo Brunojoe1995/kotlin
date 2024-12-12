@@ -25,21 +25,18 @@ import com.intellij.util.io.AbstractStringEnumerator
 import com.intellij.util.io.StringRef
 import com.intellij.util.io.UnsyncByteArrayOutputStream
 import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
+import org.jetbrains.kotlin.analysis.api.platform.declarations.*
+import org.jetbrains.kotlin.analysis.api.platform.mergeSpecificProviders
+import org.jetbrains.kotlin.analysis.api.projectStructure.KaModule
+import org.jetbrains.kotlin.analysis.api.symbols.pointers.SmartPointerIncompatiblePsiFile
 import org.jetbrains.kotlin.analysis.decompiler.konan.K2KotlinNativeMetadataDecompiler
 import org.jetbrains.kotlin.analysis.decompiler.konan.KlibMetaFileType
 import org.jetbrains.kotlin.analysis.decompiler.psi.BuiltinsVirtualFileProvider
 import org.jetbrains.kotlin.analysis.decompiler.psi.KotlinBuiltInDecompiler
 import org.jetbrains.kotlin.analysis.decompiler.psi.KotlinBuiltInFileType
+import org.jetbrains.kotlin.analysis.decompiler.stub.file.ClsClassFinder
 import org.jetbrains.kotlin.analysis.decompiler.stub.file.ClsKotlinBinaryClassCache
 import org.jetbrains.kotlin.analysis.decompiler.stub.file.KotlinClsStubBuilder
-import org.jetbrains.kotlin.analysis.api.projectStructure.KaModule
-import org.jetbrains.kotlin.analysis.api.platform.declarations.KotlinDeclarationProvider
-import org.jetbrains.kotlin.analysis.api.platform.declarations.KotlinDeclarationProviderFactory
-import org.jetbrains.kotlin.analysis.api.platform.declarations.KotlinDeclarationProviderMerger
-import org.jetbrains.kotlin.analysis.api.platform.declarations.createDeclarationProvider
-import org.jetbrains.kotlin.analysis.api.platform.declarations.KotlinCompositeDeclarationProvider
-import org.jetbrains.kotlin.analysis.api.platform.mergeSpecificProviders
-import org.jetbrains.kotlin.analysis.api.symbols.pointers.SmartPointerIncompatiblePsiFile
 import org.jetbrains.kotlin.fileClasses.javaFileFacadeFqName
 import org.jetbrains.kotlin.idea.KotlinLanguage
 import org.jetbrains.kotlin.name.*
@@ -459,19 +456,23 @@ class KotlinStandaloneDeclarationProviderFactory(
 
     private fun buildStubByVirtualFile(file: VirtualFile, binaryClassCache: ClsKotlinBinaryClassCache): KotlinFileStubImpl? {
         val fileContent = FileContentImpl.createByFile(file)
-        val fileType = file.fileType
+        val fileContentBytes = fileContent.content
+        val fileType = fileContent.fileType
         val stubBuilder = when {
-            binaryClassCache.isKotlinJvmCompiledFile(file, fileContent.content) && fileType == JavaClassFileType.INSTANCE -> {
+            ClsClassFinder.isKotlinInternalCompiledFile(file, fileContentBytes) -> null
+            binaryClassCache.isKotlinJvmCompiledFile(file, fileContentBytes) && fileType == JavaClassFileType.INSTANCE -> {
                 KotlinClsStubBuilder()
             }
-            fileType == KotlinBuiltInFileType
-                    && file.extension != BuiltInSerializerProtocol.BUILTINS_FILE_EXTENSION -> {
+
+            fileType == KotlinBuiltInFileType && file.extension != BuiltInSerializerProtocol.BUILTINS_FILE_EXTENSION -> {
                 builtInDecompiler.stubBuilder
             }
+
             fileType == KlibMetaFileType -> K2KotlinNativeMetadataDecompiler().stubBuilder
-            else -> return null
+            else -> null
         }
-        return stubBuilder.buildFileStub(fileContent) as? KotlinFileStubImpl
+
+        return stubBuilder?.buildFileStub(fileContent) as? KotlinFileStubImpl
     }
 
     private fun processCollectedBinaryStubs(stubs: Map<VirtualFile, KotlinFileStubImpl>, isSharedStubs: Boolean) {
