@@ -51,4 +51,4 @@ abstract class BodyResolveComponents : SessionHolder {
 
 
 fun BodyResolveComponents.createCurrentScopeList(): List<FirScope> =
-    towerDataElements.asReversed().mapNotNull { it.scope }
+    towerDataElements.asReversed().mapNotNull { it.scope ?: it.implicitReceiver?.scope(session, scopeSession) }

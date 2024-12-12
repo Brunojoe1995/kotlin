@@ -72,9 +72,7 @@ fun SessionHolder.collectTowerDataElementsForClass(owner: FirClass, defaultType:
     return TowerElementsForClass(
         thisReceiver,
         contextReceivers,
-        // ????
-        session.nestedClassifierScope(owner),
-        //owner.staticScope(this),
+        owner.staticScope(this),
         companionReceiver,
         companionObject?.staticScope(this),
         superClassesStaticsAndCompanionReceivers.asReversed(),
