@@ -67,7 +67,7 @@ abstract class AbstractAddContinuationToFunctionCallsLowering : BodyLoweringPass
                     newReturnType = newFun.returnType,
                     newSuperQualifierSymbol = expression.superQualifierSymbol
                 ).also {
-                    it.putValueArgument(it.valueArgumentsCount - 1, getContinuation() ?: return expression.throwLinkageError(plFile))
+                    it.arguments[it.arguments.lastIndex] = getContinuation() ?: return expression.throwLinkageError(plFile)
                 }
             }
         })
