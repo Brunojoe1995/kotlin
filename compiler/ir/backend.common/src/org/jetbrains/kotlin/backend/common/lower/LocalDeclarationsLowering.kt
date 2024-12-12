@@ -810,7 +810,10 @@ open class LocalDeclarationsLowering(
             oldDeclaration: IrFunction,
             newDeclaration: IrFunction,
             isExplicitLocalFunction: Boolean = false
-        ) = ArrayList<IrValueParameter>(capturedValues.size + oldDeclaration.valueParameters.size).apply {
+        ) = ArrayList<IrValueParameter>(
+            capturedValues.size +
+                    oldDeclaration.parameters.count { it.kind == IrParameterKind.Regular || it.kind == IrParameterKind.Context }
+        ).apply {
             val generatedNames = mutableSetOf<String>()
             capturedValues.mapTo(this) { capturedValue ->
                 val p = capturedValue.owner
