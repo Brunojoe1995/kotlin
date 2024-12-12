@@ -1082,8 +1082,9 @@ class Collections {
         fun sortedPrimitiveArrayBy() {
             val unsorted = intArrayOf(3, 1, 2, 4)
 
-            val sortedByValue = unsorted.sortedBy { it }
-            assertPrints(sortedByValue, "[1, 2, 3, 4]")
+            val sortedByRemainder = unsorted.sortedBy { it % 3 }
+            // the sorting is stable: the order of 1 (1 % 3 == 1) and 4 (4 % 3 == 1) was preserved
+            assertPrints(sortedByRemainder, "[3, 1, 4, 2]")
 
             val mapping = mapOf(1 to "one", 2 to "two", 3 to "three", 4 to "four")
             val sortedByPronunciation = unsorted.sortedBy {
@@ -1120,8 +1121,9 @@ class Collections {
         fun sortedPrimitiveArrayByDescending() {
             val unsorted = intArrayOf(3, 1, 2, 4)
 
-            val sortedByValue = unsorted.sortedByDescending { it }
-            assertPrints(sortedByValue, "[4, 3, 2, 1]")
+            val sortedByValue = unsorted.sortedByDescending { it % 3 }
+            // the sorting is stable: the order of 1 (1 % 3 == 1) and 4 (4 % 3 == 1) was preserved
+            assertPrints(sortedByValue, "[2, 1, 4, 3]")
 
             val mapping = mapOf(1 to "one", 2 to "two", 3 to "three", 4 to "four")
             val sortedByPronunciation = unsorted.sortedByDescending {
