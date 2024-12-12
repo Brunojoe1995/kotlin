@@ -997,7 +997,7 @@ open class LocalDeclarationsLowering(
 
         private fun IrValueParameter.isExtensionReceiver(): Boolean {
             val parentFun = parent as? IrFunction ?: return false
-            return parentFun.extensionReceiverParameter == this
+            return parentFun.parameters.firstOrNull { it.kind == IrParameterKind.ExtensionReceiver } == this
         }
 
         private val CAPTURED_RECEIVER_PREFIX = "\$this\$"
