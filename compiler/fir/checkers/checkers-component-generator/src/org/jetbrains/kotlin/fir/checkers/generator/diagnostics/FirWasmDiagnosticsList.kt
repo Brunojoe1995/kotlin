@@ -64,6 +64,8 @@ object WASM_DIAGNOSTICS_LIST : DiagnosticList("FirWasmErrors") {
         val WASM_IMPORT_EXPORT_UNSUPPORTED_RETURN_TYPE by error<KtElement>(PositioningStrategy.DECLARATION_SIGNATURE_OR_DEFAULT) {
             parameter<ConeKotlinType>("type")
         }
+        val WASM_EXTERNAL_DECLARATION_WITH_CONTEXT_PARAMETERS by error<KtElement>()
+        val WASM_EXPORT_DECLARATION_WITH_CONTEXT_PARAMETERS by error<KtElement>()
     }
 
     val WASI by object : DiagnosticGroup("WASI") {
