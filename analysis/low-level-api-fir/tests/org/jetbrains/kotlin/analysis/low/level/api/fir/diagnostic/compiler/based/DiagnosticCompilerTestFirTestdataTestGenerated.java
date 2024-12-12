@@ -5562,6 +5562,12 @@ public class DiagnosticCompilerTestFirTestdataTestGenerated extends AbstractDiag
       }
 
       @Test
+      @TestMetadata("propagation.kt")
+      public void testPropagation() {
+        runTest("compiler/fir/analysis-tests/testData/resolve/unqualifiedEnum/propagation.kt");
+      }
+
+      @Test
       @TestMetadata("smartcast.kt")
       public void testSmartcast() {
         runTest("compiler/fir/analysis-tests/testData/resolve/unqualifiedEnum/smartcast.kt");
