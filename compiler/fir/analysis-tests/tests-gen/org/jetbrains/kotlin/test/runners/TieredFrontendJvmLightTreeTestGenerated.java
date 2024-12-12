@@ -30000,9 +30000,15 @@ public class TieredFrontendJvmLightTreeTestGenerated extends AbstractTieredFront
       }
 
       @Test
-      @TestMetadata("filterByEntriesFail.kt")
-      public void testFilterByEntriesFail() {
-        runTest("compiler/fir/analysis-tests/testData/resolve/unqualifiedEnum/filterByEntriesFail.kt");
+      @TestMetadata("filterByEntries1.kt")
+      public void testFilterByEntries1() {
+        runTest("compiler/fir/analysis-tests/testData/resolve/unqualifiedEnum/filterByEntries1.kt");
+      }
+
+      @Test
+      @TestMetadata("filterByEntries2.kt")
+      public void testFilterByEntries2() {
+        runTest("compiler/fir/analysis-tests/testData/resolve/unqualifiedEnum/filterByEntries2.kt");
       }
 
       @Test

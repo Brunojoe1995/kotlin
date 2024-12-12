@@ -1,4 +1,4 @@
-FILE: filterByEntries.kt
+FILE: filterByEntries1.kt
     public final enum class A : R|kotlin/Enum<A>| {
         private constructor(): R|A| {
             super<R|kotlin/Enum<A>|>()
@@ -39,5 +39,5 @@ FILE: filterByEntries.kt
     public final fun foo(b: R|B|): R|kotlin/Int| {
         ^foo Int(2)
     }
-    public final val result: R|kotlin/Int| = R|/foo|(R|/A.A1|).R|kotlin/Int.plus|(R|/foo|(R|/B.B2|))
-        public get(): R|kotlin/Int|
+    public final val result: R|kotlin/String| = <Ambiguity: foo, [/foo, /foo]>#(<Unresolved name: A1>#).R|kotlin/plus|(<Ambiguity: foo, [/foo, /foo]>#(<Unresolved name: B2>#))
+        public get(): R|kotlin/String|

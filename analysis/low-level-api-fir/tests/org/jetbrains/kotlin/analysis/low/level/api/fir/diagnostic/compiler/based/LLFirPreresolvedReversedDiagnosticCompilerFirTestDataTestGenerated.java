@@ -5496,15 +5496,15 @@ public class LLFirPreresolvedReversedDiagnosticCompilerFirTestDataTestGenerated 
       }
 
       @Test
-      @TestMetadata("filterByEntries.kt")
-      public void testFilterByEntries() {
-        runTest("compiler/fir/analysis-tests/testData/resolve/unqualifiedEnum/filterByEntries.kt");
+      @TestMetadata("filterByEntries1.kt")
+      public void testFilterByEntries1() {
+        runTest("compiler/fir/analysis-tests/testData/resolve/unqualifiedEnum/filterByEntries1.kt");
       }
 
       @Test
-      @TestMetadata("filterByEntriesFail.kt")
-      public void testFilterByEntriesFail() {
-        runTest("compiler/fir/analysis-tests/testData/resolve/unqualifiedEnum/filterByEntriesFail.kt");
+      @TestMetadata("filterByEntries2.kt")
+      public void testFilterByEntries2() {
+        runTest("compiler/fir/analysis-tests/testData/resolve/unqualifiedEnum/filterByEntries2.kt");
       }
 
       @Test
@@ -5722,7 +5722,7 @@ public class LLFirPreresolvedReversedDiagnosticCompilerFirTestDataTestGenerated 
     public class WithExpectedType {
       @Test
       public void testAllFilesPresentInWithExpectedType() {
-        KtTestUtil.assertAllTestsPresentByMetadataWithExcluded(this.getClass(), new File("compiler/fir/analysis-tests/testData/resolve/withExpectedType"), Pattern.compile("^([^.]+)\\.kt$"), null, true);
+        KtTestUtil.assertAllTestsPresentByMetadataWithExcluded(this.getClass(), new File("compiler/fir/analysis-tests/testData/resolve/withExpectedType"), Pattern.compile("^([^.]+)\\.kt$"), null, true, "lightTree");
       }
 
       @Test

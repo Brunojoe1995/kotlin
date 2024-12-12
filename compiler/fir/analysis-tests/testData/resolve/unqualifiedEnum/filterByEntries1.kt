@@ -1,4 +1,4 @@
-// RUN_PIPELINE_TILL: BACKEND
+// RUN_PIPELINE_TILL: FRONTEND
 // LANGUAGE: +ExpectedTypeGuidedResolution
 
 enum class A {
@@ -11,4 +11,4 @@ enum class B {
 fun foo(a: A): Int = 1
 fun foo(b: B): Int = 2
 
-val result = foo(A1) + foo(B2)
+val result = foo(<!UNRESOLVED_REFERENCE!>A1<!>) + foo(<!UNRESOLVED_REFERENCE!>B2<!>)

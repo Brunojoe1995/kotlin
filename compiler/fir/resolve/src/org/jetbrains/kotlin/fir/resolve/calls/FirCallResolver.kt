@@ -175,30 +175,6 @@ class FirCallResolver(
         }
     }
 
-    fun collectAllPropertyCandidates(
-        qualifiedAccess: FirQualifiedAccessExpression,
-        name: Name,
-        containingDeclarations: List<FirDeclaration> = transformer.components.containingDeclarations,
-        resolutionContext: ResolutionContext = transformer.resolutionContext,
-        resolutionMode: ResolutionMode,
-    ): List<OverloadCandidate> {
-        require(qualifiedAccess !is FirFunctionCall)
-        val collector = AllCandidatesCollector(components, components.resolutionStageRunner)
-        var result = collectCandidates(
-            qualifiedAccess = qualifiedAccess,
-            name = name,
-            origin = FirFunctionCallOrigin.Regular,
-            containingDeclarations = containingDeclarations,
-            resolutionContext = resolutionContext,
-            collector = collector,
-            resolutionMode = resolutionMode,
-            forceCallKind = CallKind.VariableAccess,
-        )
-        return collector.allCandidates.map { candidate ->
-            OverloadCandidate(candidate, isInBestCandidates = candidate in result.candidates)
-        }
-    }
-
     private fun collectCandidates(
         qualifiedAccess: FirQualifiedAccessExpression,
         name: Name,
