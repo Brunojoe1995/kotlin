@@ -789,14 +789,13 @@ open class LocalDeclarationsLowering(
             }
             newDeclaration.copyAttributes(oldDeclaration)
 
-            newDeclaration.valueParameters = newDeclaration.valueParameters memoryOptimizedPlus createTransformedValueParameters(
+            newDeclaration.parameters = newDeclaration.parameters memoryOptimizedPlus createTransformedValueParameters(
                 capturedValues, localFunctionContext, oldDeclaration, newDeclaration,
                 isExplicitLocalFunction = oldDeclaration.origin == IrDeclarationOrigin.LOCAL_FUNCTION
             )
             newDeclaration.recordTransformedValueParameters(localFunctionContext)
             val parametersMapping = buildMap {
-                oldDeclaration.extensionReceiverParameter?.let { put(it, newDeclaration.extensionReceiverParameter!!) }
-                putAll(oldDeclaration.valueParameters zip newDeclaration.valueParameters.takeLast(oldDeclaration.valueParameters.size))
+                putAll(oldDeclaration.parameters zip newDeclaration.parameters.takeLast(oldDeclaration.parameters.size))
             }
             context.remapMultiFieldValueClassStructure(oldDeclaration, newDeclaration, parametersMapping)
 
@@ -823,6 +822,7 @@ open class LocalDeclarationsLowering(
                         else BOUND_VALUE_PARAMETER
                     name = suggestNameForCapturedValue(p, generatedNames, isExplicitLocalFunction = isExplicitLocalFunction)
                     type = localFunctionContext.remapType(p.type)
+                    kind = IrParameterKind.Regular
                     isCrossInline = (capturedValue as? IrValueParameterSymbol)?.owner?.isCrossinline == true
                     isNoinline = (capturedValue as? IrValueParameterSymbol)?.owner?.isNoinline == true
                 }.also {
