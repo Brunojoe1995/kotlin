@@ -836,15 +836,16 @@ open class LocalDeclarationsLowering(
                 }
             }
 
-            oldDeclaration.valueParameters.mapTo(this) { v ->
-                v.copyTo(
-                    newDeclaration,
-                    type = localFunctionContext.remapType(v.type),
-                    varargElementType = v.varargElementType?.let { localFunctionContext.remapType(it) }
-                ).also {
-                    newParameterToOld.putAbsentOrSame(it, v)
+            oldDeclaration.parameters.filter { it.kind == IrParameterKind.Regular || it.kind == IrParameterKind.Context }
+                .mapTo(this) { v ->
+                    v.copyTo(
+                        newDeclaration,
+                        type = localFunctionContext.remapType(v.type),
+                        varargElementType = v.varargElementType?.let { localFunctionContext.remapType(it) }
+                    ).also {
+                        newParameterToOld.putAbsentOrSame(it, v)
+                    }
                 }
-            }
         }
 
         private fun IrFunction.recordTransformedValueParameters(localContext: LocalContextWithClosureAsParameters) {
