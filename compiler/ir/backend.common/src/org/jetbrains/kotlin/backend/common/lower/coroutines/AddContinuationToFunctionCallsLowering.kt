@@ -86,7 +86,7 @@ abstract class AbstractAddContinuationToFunctionCallsLowering : BodyLoweringPass
                     throw IllegalArgumentException("Continuation parameter only exists in lowered suspend functions, but function origin is $origin")
             }
 
-            val continuation = valueParameters.lastOrNull()
+            val continuation = parameters.lastOrNull { it.kind == IrParameterKind.Regular || it.kind == IrParameterKind.Context }
             require(continuation != null && continuation.origin == IrDeclarationOrigin.CONTINUATION) {
                 "Continuation parameter is expected to be the last one"
             }
