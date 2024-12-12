@@ -23,13 +23,16 @@ import org.jetbrains.kotlin.fir.symbols.impl.*
 import org.jetbrains.kotlin.fir.types.FirResolvedTypeRef
 import org.jetbrains.kotlin.fir.visitors.FirDefaultVisitorVoid
 import org.jetbrains.kotlin.ir.builders.declarations.addField
+import org.jetbrains.kotlin.ir.builders.declarations.addValueParameter
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
 import org.jetbrains.kotlin.ir.declarations.IrReplSnippet
 import org.jetbrains.kotlin.ir.declarations.impl.IrFactoryImpl
 import org.jetbrains.kotlin.ir.symbols.impl.IrValueParameterSymbolImpl
 import org.jetbrains.kotlin.ir.util.createThisReceiverParameter
+import org.jetbrains.kotlin.ir.util.defaultType
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
+import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.name.NameUtils
 import org.jetbrains.kotlin.name.SpecialNames
 import kotlin.script.experimental.host.ScriptingHostConfiguration
@@ -122,8 +125,13 @@ class Fir2IrReplSnippetConfiguratorExtensionImpl(
                     parent = originalSnippet
                     visibility = DescriptorVisibilities.PUBLIC
                     createThisReceiverParameter()
-                    val c = classSymbol.fir.primaryConstructorIfAny(session)?.let {
-                        declarationStorage.createAndCacheIrConstructor(it.fir, { this }, isLocal = false)
+                    classSymbol.fir.primaryConstructorIfAny(session)?.let {
+                        declarationStorage.createAndCacheIrConstructor(it.fir, { this }, isLocal = false).also {
+                            it.addValueParameter {
+                                name = Name.special("<snippet>")
+                                type = originalSnippet.defaultType
+                            }
+                        }
                     }
                     classSymbol.fir.declarations.forEach { declaration ->
                         when (declaration) {

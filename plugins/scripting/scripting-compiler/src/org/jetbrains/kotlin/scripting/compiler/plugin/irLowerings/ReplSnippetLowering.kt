@@ -19,7 +19,6 @@ import org.jetbrains.kotlin.ir.UNDEFINED_OFFSET
 import org.jetbrains.kotlin.ir.builders.*
 import org.jetbrains.kotlin.ir.builders.declarations.*
 import org.jetbrains.kotlin.ir.declarations.*
-import org.jetbrains.kotlin.ir.declarations.impl.IrClassImpl
 import org.jetbrains.kotlin.ir.expressions.*
 import org.jetbrains.kotlin.ir.expressions.impl.*
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
@@ -82,7 +81,7 @@ internal class ReplSnippetsToClassesLowering(val context: IrPluginContext) : Mod
         }
     }
 
-    private fun collectCapturingClasses(irSnippet: IrReplSnippet, irSnippetClass: IrClass, typeRemapper: SimpleTypeRemapper): Set<IrClassImpl> {
+    private fun collectCapturingClasses(irSnippet: IrReplSnippet, irSnippetClass: IrClass, typeRemapper: SimpleTypeRemapper): Set<IrClass> {
         val externalReceivers = mutableSetOf<IrType>().also {
             it.addIfNotNull(irSnippetClass.thisReceiver?.type)
         }
@@ -100,7 +99,8 @@ internal class ReplSnippetsToClassesLowering(val context: IrPluginContext) : Mod
             }
         }
 
-        return irSnippet.body.statements.filterIsInstance<IrClass>().collectCapturersByReceivers(context, irSnippet, externalReceivers)
+        val topLevelClasses = irSnippet.body.statements.filterIsInstance<IrClass>()
+        return topLevelClasses.collectCapturersByReceivers(context, irSnippet, externalReceivers, alwaysInclude = topLevelClasses.toSet())
     }
 
     @OptIn(UnsafeDuringIrConstructionAPI::class)
@@ -383,7 +383,7 @@ private class ReplSnippetToClassTransformer(
     snippetClassReceiver: IrValueParameter,
     typeRemapper: TypeRemapper,
     override val accessCallsGenerator: ReplSnippetAccessCallsGenerator,
-    capturingClasses: Set<IrClassImpl>,
+    capturingClasses: Set<IrClass>,
     val varsToFields: Map<IrVariableSymbol, IrFieldSymbol>,
 ) : ScriptLikeToClassTransformer(
     context,
@@ -476,6 +476,23 @@ private class ReplSnippetToClassTransformer(
             expression
         } else {
             super.visitCall(expression, data)
+        }
+    }
+
+    override fun visitConstructorCall(
+        expression: IrConstructorCall,
+        data: ScriptLikeToClassTransformerContext,
+    ): IrExpression {
+        return if ((expression.symbol.owner.parent as? IrDeclaration)?.let { it in irSnippet.capturingDeclarationsFromOtherSnippets } == true) {
+            expression.arguments +=
+                accessCallsGenerator.createAccessToSnippet(
+                    ((expression.symbol.owner.parent as IrClass).parent as IrClass).symbol,
+                    data, expression.startOffset, expression.endOffset
+                )
+            expression.transformChildren(this, data)
+            expression
+        } else {
+            super.visitConstructorCall(expression, data)
         }
     }
 }
