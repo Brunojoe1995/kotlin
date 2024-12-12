@@ -820,9 +820,12 @@ open class LocalDeclarationsLowering(
                 buildValueParameter(newDeclaration) {
                     startOffset = p.startOffset
                     endOffset = p.endOffset
-                    origin =
-                        if (p is IrValueParameter && p.indexInOldValueParameters < 0 && newDeclaration is IrConstructor) BOUND_RECEIVER_PARAMETER
-                        else BOUND_VALUE_PARAMETER
+                    origin = if (
+                        p is IrValueParameter &&
+                        p.kind in listOf(IrParameterKind.Regular, IrParameterKind.Context) &&
+                        newDeclaration is IrConstructor
+                    ) BOUND_RECEIVER_PARAMETER
+                    else BOUND_VALUE_PARAMETER
                     name = suggestNameForCapturedValue(p, generatedNames, isExplicitLocalFunction = isExplicitLocalFunction)
                     type = localFunctionContext.remapType(p.type)
                     kind = IrParameterKind.Regular
