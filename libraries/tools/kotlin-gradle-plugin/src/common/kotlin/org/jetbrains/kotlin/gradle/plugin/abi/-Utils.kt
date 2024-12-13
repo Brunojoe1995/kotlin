@@ -12,7 +12,6 @@ import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.tasks.SourceSet
 import org.jetbrains.kotlin.abi.tools.api.KlibTarget
-import org.jetbrains.kotlin.abi.tools.api.konanTargetNameMapping
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import org.jetbrains.kotlin.gradle.plugin.KotlinTarget
@@ -26,21 +25,20 @@ import org.jetbrains.kotlin.konan.target.HostManager
 /**
  * Converts [KotlinTarget] to a [KlibTarget].
  */
-public fun KotlinTarget.toKlibTarget(): KlibTarget = KlibTarget(extractUnderlyingTarget(this), targetName)
-
-internal fun extractUnderlyingTarget(target: KotlinTarget): String {
-    if (target is KotlinNativeTarget) {
-        return konanTargetNameMapping[target.konanTarget.name]!!
+public fun KotlinTarget.toKlibTarget(): KlibTarget {
+    if (this is KotlinNativeTarget) {
+        return KlibTarget.fromKonanTargetName(konanTarget.name).configureName(targetName)
     }
-    return when (target.platformType) {
+    val name = when (platformType) {
         KotlinPlatformType.js -> "js"
-        KotlinPlatformType.wasm -> when ((target as KotlinJsIrTarget).wasmTargetType) {
+        KotlinPlatformType.wasm -> when ((this as KotlinJsIrTarget).wasmTargetType) {
             KotlinWasmTargetType.WASI -> "wasmWasi"
             KotlinWasmTargetType.JS -> "wasmJs"
             else -> throw IllegalStateException("Unreachable")
         }
-        else -> throw IllegalArgumentException("Unsupported platform type: ${target.platformType}")
+        else -> throw IllegalArgumentException("Unsupported platform type: $platformType")
     }
+    return KlibTarget(name, targetName)
 }
 
 /**

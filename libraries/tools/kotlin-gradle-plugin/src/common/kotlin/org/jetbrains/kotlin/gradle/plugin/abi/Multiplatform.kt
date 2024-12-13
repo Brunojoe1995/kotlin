@@ -85,14 +85,14 @@ private fun Project.processNonJvmTargets(
         .asSequence()
         .filter { target -> target.emitsKlib }
         .forEach { target ->
-            val canonicalTargetName = extractUnderlyingTarget(target)
+            val klibTarget = target.toKlibTarget()
 
-            if (targetIsSupported(target) && target.targetName !in bannedInTests) {
+            if (targetIsSupported(target) && klibTarget.configurableName !in bannedInTests) {
                 target.compilations.withMainCompilation {
-                    abiValidationTaskSet.addKlibTarget(target.targetName, canonicalTargetName, output.classesDirs)
+                    abiValidationTaskSet.addKlibTarget(klibTarget, output.classesDirs)
                 }
             } else {
-                abiValidationTaskSet.unsupportedTarget(target.targetName, canonicalTargetName)
+                abiValidationTaskSet.unsupportedTarget(klibTarget)
             }
         }
 }

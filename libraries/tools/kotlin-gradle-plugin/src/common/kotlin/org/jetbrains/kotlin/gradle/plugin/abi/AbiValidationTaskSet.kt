@@ -50,14 +50,14 @@ internal class AbiValidationTaskSet(project: Project, variantName: String) {
     }
 
     /**
-     * Add declarations for non-JVM target with name [targetName].
+     * Add declarations for non-JVM target.
      *
-     * @param [targetName] configurable target name, can be changed by user
-     * @param canonicalTargetName standardized target name returned by [extractUnderlyingTarget] function for given target.
+     * @param [klibTarget] target to add
+     * @param [klibFile] file in klib format with Kotlin compiled code
      */
-    fun addKlibTarget(targetName: String, canonicalTargetName: String, klibFile: FileCollection) {
+    fun addKlibTarget(klibTarget: KlibTarget, klibFile: FileCollection) {
         legacyDumpTaskProvider.configure {
-            it.klibInput.add(KotlinLegacyAbiDumpTaskImpl.KlibTargetInfo(targetName, canonicalTargetName, klibFile))
+            it.klibInput.add(KotlinLegacyAbiDumpTaskImpl.KlibTargetInfo(klibTarget.configurableName, klibTarget.targetName, klibFile))
         }
     }
 
@@ -82,9 +82,9 @@ internal class AbiValidationTaskSet(project: Project, variantName: String) {
     /**
      * Mark specified target as unsupported by Kotlin compiler on current host.
      */
-    fun unsupportedTarget(targetName: String, canonicalTargetName: String) {
+    fun unsupportedTarget(klibTarget: KlibTarget) {
         legacyDumpTaskProvider.configure {
-            it.unsupportedTargets.add(KlibTarget(canonicalTargetName, targetName))
+            it.unsupportedTargets.add(klibTarget)
         }
     }
 

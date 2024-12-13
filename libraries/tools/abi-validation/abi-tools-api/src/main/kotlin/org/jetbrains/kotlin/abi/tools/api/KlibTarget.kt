@@ -58,8 +58,23 @@ public class KlibTarget(
             return KlibTarget(parts[0], parts[1])
         }
 
+        /**
+         * Get klib target by Konan target name.
+         */
+        public fun fromKonanTargetName(konanName: String): KlibTarget {
+            val targetName = konanTargetNameMapping[konanName] ?: throw IllegalArgumentException("Konan name '$konanName' not found")
+            return KlibTarget(targetName, targetName)
+        }
+
         @JvmStatic
         private val serialVersionUID: Long = 1
+    }
+
+    /**
+     * Create copy of this target with new configurable name from [newConfigurableName] parameter.
+     */
+    public fun configureName(newConfigurableName: String): KlibTarget {
+        return KlibTarget(targetName, newConfigurableName)
     }
 
 
@@ -85,7 +100,7 @@ public class KlibTarget(
 
 public fun KlibTarget(name: String) = KlibTarget(name, name)
 
-public val konanTargetNameMapping = mapOf(
+internal val konanTargetNameMapping = mapOf(
     "android_x64" to "androidNativeX64",
     "android_x86" to "androidNativeX86",
     "android_arm32" to "androidNativeArm32",

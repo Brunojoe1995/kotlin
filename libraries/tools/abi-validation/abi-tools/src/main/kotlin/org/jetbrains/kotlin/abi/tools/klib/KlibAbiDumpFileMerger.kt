@@ -6,7 +6,6 @@
 package org.jetbrains.kotlin.abi.tools.klib
 
 import org.jetbrains.kotlin.abi.tools.api.KlibTarget
-import org.jetbrains.kotlin.abi.tools.api.konanTargetNameMapping
 import java.io.File
 import java.nio.file.Files
 import java.util.*
@@ -291,9 +290,9 @@ internal class KlibAbiDumpMerger {
         check(targetsString != null) { "Dump for a native platform missing targets list." }
 
         val targetsList = targetsString.split(TARGETS_DELIMITER).map {
-            konanTargetNameMapping[it.trim()] ?: throw IllegalStateException("Unknown native target: $it")
+            KlibTarget.fromKonanTargetName(it.trim())
         }
-        return targetsList.asSequence().map { KlibTarget(it) }.toSet()
+        return targetsList.toSet()
     }
 
     private fun PeekingLineIterator.determineFileType(): Boolean {

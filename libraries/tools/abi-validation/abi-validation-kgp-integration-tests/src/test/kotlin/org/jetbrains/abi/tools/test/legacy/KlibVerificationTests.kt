@@ -29,13 +29,13 @@ private fun KlibVerificationTests.checkKlibDump(
     val generatedDump = rootProjectAbiDump(projectName)
     assertTrue(generatedDump.exists(), "There are no dumps generated for KLibs")
 
-    val expected = _root_ide_package_.org.jetbrains.abi.tools.test.api.readFileList(expectedDumpFileName)
+    val expected = readFileList(expectedDumpFileName)
 
     Assertions.assertThat(generatedDump.readText()).isEqualTo(expected)
 }
 
 internal class KlibVerificationTests : BaseKotlinGradleTest() {
-    private fun _root_ide_package_.org.jetbrains.abi.tools.test.api.BaseKotlinScope.baseProjectSetting() {
+    private fun BaseKotlinScope.baseProjectSetting() {
         settingsGradleKts {
             resolve("/examples/gradle/settings/settings-name-testproject.gradle.kts")
         }
@@ -44,26 +44,26 @@ internal class KlibVerificationTests : BaseKotlinGradleTest() {
         }
     }
 
-    private fun _root_ide_package_.org.jetbrains.abi.tools.test.api.BaseKotlinScope.additionalBuildConfig(config: String) {
+    private fun BaseKotlinScope.additionalBuildConfig(config: String) {
         buildGradleKts {
             resolve(config)
         }
     }
 
-    private fun _root_ide_package_.org.jetbrains.abi.tools.test.api.BaseKotlinScope.addToSrcSet(pathTestFile: String, sourceSet: String = "commonMain") {
+    private fun BaseKotlinScope.addToSrcSet(pathTestFile: String, sourceSet: String = "commonMain") {
         val fileName = Paths.get(pathTestFile).fileName.toString()
         kotlin(fileName, sourceSet) {
             resolve(pathTestFile)
         }
     }
 
-    private fun _root_ide_package_.org.jetbrains.abi.tools.test.api.BaseKotlinScope.runApiCheck() {
+    private fun BaseKotlinScope.runApiCheck() {
         runner {
             arguments.add(":checkLegacyAbi")
         }
     }
 
-    private fun _root_ide_package_.org.jetbrains.abi.tools.test.api.BaseKotlinScope.runApiDump() {
+    private fun BaseKotlinScope.runApiDump() {
         runner {
             arguments.add(":updateLegacyAbi")
             arguments.add("--info")
