@@ -14,7 +14,7 @@ import org.jetbrains.kotlin.gradle.targets.js.npm.LockCopyTask.Companion.RESTORE
 import org.jetbrains.kotlin.gradle.targets.js.npm.LockCopyTask.Companion.STORE_PACKAGE_LOCK_NAME
 import org.jetbrains.kotlin.gradle.targets.js.npm.LockCopyTask.Companion.UPGRADE_PACKAGE_LOCK
 import org.jetbrains.kotlin.gradle.targets.js.npm.fromSrcPackageJson
-import org.jetbrains.kotlin.gradle.targets.js.yarn.JsYarnPlugin
+import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnPlugin
 import org.jetbrains.kotlin.gradle.testbase.*
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.condition.OS
@@ -72,11 +72,11 @@ class YarnGradlePluginIT : PackageManagerGradlePluginIT() {
 
     override val extension: String = "yarn.YarnRootExtension"
 
-    override val upgradeTaskName: String = JsYarnPlugin.UPGRADE_YARN_LOCK
+    override val upgradeTaskName: String = YarnPlugin.UPGRADE_YARN_LOCK
 
-    override val storeTaskName = JsYarnPlugin.STORE_YARN_LOCK_NAME
+    override val storeTaskName = YarnPlugin.STORE_YARN_LOCK_NAME
 
-    override val restoreTaskName: String = JsYarnPlugin.RESTORE_YARN_LOCK_NAME
+    override val restoreTaskName: String = YarnPlugin.RESTORE_YARN_LOCK_NAME
 
     override val reportNewLockFile: String = "reportNewYarnLock"
 
@@ -90,7 +90,7 @@ class YarnGradlePluginIT : PackageManagerGradlePluginIT() {
 
     override val setProperty: (String) -> String = { " = $it" }
 
-    override val mismatchReportMessage: String = JsYarnPlugin.YARN_LOCK_MISMATCH_MESSAGE
+    override val mismatchReportMessage: String = YarnPlugin.YARN_LOCK_MISMATCH_MESSAGE
 }
 
 @JsGradlePluginTests

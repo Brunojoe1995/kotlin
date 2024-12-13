@@ -1,4 +1,3 @@
-@file:Suppress("DEPRECATION")
 import org.jetbrains.kotlin.build.nodejs.NodeJsExtension
 import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootPlugin
 

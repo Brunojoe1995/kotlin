@@ -17,7 +17,7 @@ import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsEnv
 import org.jetbrains.kotlin.gradle.targets.js.nodejs.NpmApiExtension
 import org.jetbrains.kotlin.gradle.targets.js.nodejs.Platform
 import org.jetbrains.kotlin.gradle.targets.js.npm.LockCopyTask
-import org.jetbrains.kotlin.gradle.targets.js.yarn.JsYarnPlugin
+import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnPlugin
 import org.jetbrains.kotlin.gradle.targets.js.yarn.Yarn
 import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnEnv
 import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnEnvironment
@@ -117,9 +117,9 @@ open class AbstractYarnRootExtension(
 
     val restoreYarnLockTaskProvider: TaskProvider<YarnLockCopyTask>
         get() = project.tasks.withType(YarnLockCopyTask::class.java)
-            .named(nodeJsRoot.extensionName(JsYarnPlugin.Companion.RESTORE_YARN_LOCK_NAME))
+            .named(nodeJsRoot.extensionName(YarnPlugin.Companion.RESTORE_YARN_LOCK_NAME))
 
     val storeYarnLockTaskProvider: TaskProvider<YarnLockStoreTask>
         get() = project.tasks.withType(YarnLockStoreTask::class.java)
-            .named(nodeJsRoot.extensionName(JsYarnPlugin.Companion.STORE_YARN_LOCK_NAME))
+            .named(nodeJsRoot.extensionName(YarnPlugin.Companion.STORE_YARN_LOCK_NAME))
 }

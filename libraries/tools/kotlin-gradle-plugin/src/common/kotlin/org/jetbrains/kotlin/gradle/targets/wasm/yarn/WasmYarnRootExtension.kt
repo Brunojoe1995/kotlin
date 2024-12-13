@@ -10,7 +10,7 @@ import org.jetbrains.kotlin.gradle.targets.js.HasPlatformDisambiguate
 import org.jetbrains.kotlin.gradle.targets.wasm.nodejs.WasmNodeJsRootExtension
 import org.jetbrains.kotlin.gradle.targets.wasm.nodejs.WasmPlatformDisambiguate
 import org.jetbrains.kotlin.gradle.targets.web.yarn.AbstractYarnRootExtension
-import org.jetbrains.kotlin.gradle.targets.js.yarn.JsYarnPlugin
+import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnPlugin
 
 open class WasmYarnRootExtension(
     project: Project,
@@ -27,7 +27,7 @@ open class WasmYarnRootExtension(
 
         operator fun get(project: Project): WasmYarnRootExtension {
             val rootProject = project.rootProject
-            rootProject.plugins.apply(JsYarnPlugin::class.java)
+            rootProject.plugins.apply(YarnPlugin::class.java)
             return rootProject.extensions.getByName(YARN) as WasmYarnRootExtension
         }
     }

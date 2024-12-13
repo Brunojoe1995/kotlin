@@ -1169,7 +1169,6 @@ if (disableVerificationTasks) {
 
 gradle.taskGraph.whenReady(checkYarnAndNPMSuppressed)
 
-@Suppress("DEPRECATION")
 plugins.withType(org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootPlugin::class) {
     extensions.configure(org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootExtension::class.java) {
         npmInstallTaskProvider.configure {
@@ -1178,7 +1177,6 @@ plugins.withType(org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootPlugin:
     }
 }
 
-@Suppress("DEPRECATION")
 plugins.withType(com.github.gradle.node.NodePlugin::class) {
     extensions.configure(com.github.gradle.node.NodeExtension::class) {
         if (kotlinBuildProperties.isCacheRedirectorEnabled) {
