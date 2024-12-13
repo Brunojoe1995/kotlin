@@ -314,7 +314,7 @@ internal fun List<ClassBinarySignature>.filterByMatcher(matcher: FiltersMatcher)
             if (!matcher.hasAnnotationFilters) return@mapNotNull filtering.classDeclaration
 
             val classDeclaration = filtering.classDeclaration
-            val testClass = filtering.passed
+            val testClass = filtering.result
 
             val members = classDeclaration.memberSignatures.filter { memberSignature ->
                 val annotations = memberSignature.annotations.extractAnnotationQualifiedNames()
@@ -337,7 +337,7 @@ internal fun List<ClassBinarySignature>.filterByMatcher(matcher: FiltersMatcher)
 
 internal fun List<ClassBinarySignature>.dump(): PrintStream = dump(to = System.out)
 
-internal class FilteredDeclaration(val classDeclaration: ClassBinarySignature, val passed: FilterResult)
+internal class FilteredDeclaration(val classDeclaration: ClassBinarySignature, val result: FilterResult)
 
 internal fun <T : Appendable> List<ClassBinarySignature>.dump(to: T): T {
     sortedBy { it.name }
