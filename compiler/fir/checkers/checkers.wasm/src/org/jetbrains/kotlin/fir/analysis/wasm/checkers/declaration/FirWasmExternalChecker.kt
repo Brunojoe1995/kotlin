@@ -41,7 +41,7 @@ object FirWasmExternalChecker : FirWebCommonExternalChecker(allowCompanionInInte
             }
             if (context.languageVersionSettings.supportsFeature(LanguageFeature.ContextParameters)) {
                 if (declaration.contextParameters.isNotEmpty()) {
-                    reporter.reportOn(declaration.source, FirWasmErrors.WASM_EXTERNAL_DECLARATION_WITH_CONTEXT_PARAMETERS, context)
+                    reporter.reportOn(declaration.source, FirWasmErrors.EXTERNAL_DECLARATION_WITH_CONTEXT_PARAMETERS, context)
                 }
             }
         }
@@ -52,7 +52,7 @@ object FirWasmExternalChecker : FirWebCommonExternalChecker(allowCompanionInInte
             }
             if (context.languageVersionSettings.supportsFeature(LanguageFeature.ContextParameters)) {
                 if (declaration.contextParameters.isNotEmpty()) {
-                    reporter.reportOn(declaration.source, FirWasmErrors.WASM_EXTERNAL_DECLARATION_WITH_CONTEXT_PARAMETERS, context)
+                    reporter.reportOn(declaration.source, FirWasmErrors.EXTERNAL_DECLARATION_WITH_CONTEXT_PARAMETERS, context)
                 }
             }
         }

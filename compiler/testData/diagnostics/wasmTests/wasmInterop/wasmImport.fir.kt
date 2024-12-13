@@ -50,6 +50,6 @@ external fun fooDeafultAndVararg(
 <!WASM_IMPORT_EXPORT_UNSUPPORTED_PARAMETER_TYPE, WASM_IMPORT_EXPORT_VARARG_PARAMETER!>vararg b: Int<!>
 ): Unit
 
-<!WASM_EXTERNAL_DECLARATION_WITH_CONTEXT_PARAMETERS!>context(x: Int)
+<!EXTERNAL_DECLARATION_WITH_CONTEXT_PARAMETERS!>context(x: Int)
 @WasmImport("a", "b")
 external fun fooWithContext(): Unit<!>

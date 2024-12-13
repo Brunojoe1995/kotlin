@@ -42,7 +42,7 @@ object FirWasmExportAnnotationChecker : FirBasicDeclarationChecker(MppCheckerKin
             }
             if (context.languageVersionSettings.supportsFeature(LanguageFeature.ContextParameters)) {
                 if (declaration.contextParameters.isNotEmpty()) {
-                    reporter.reportOn(declaration.source, FirWasmErrors.WASM_EXPORT_DECLARATION_WITH_CONTEXT_PARAMETERS, context)
+                    reporter.reportOn(declaration.source, FirWasmErrors.EXPORT_DECLARATION_WITH_CONTEXT_PARAMETERS, context)
                 }
             }
             checkWasmInteropSignature(declaration, context, reporter)
