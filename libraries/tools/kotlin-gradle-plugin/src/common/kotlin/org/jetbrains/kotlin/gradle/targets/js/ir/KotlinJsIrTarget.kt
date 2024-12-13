@@ -23,7 +23,7 @@ import org.jetbrains.kotlin.gradle.targets.wasm.nodejs.WasmNodeJsRootPlugin
 import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootPlugin
 import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootPlugin.Companion.kotlinNodeJsRootExtension
 import org.jetbrains.kotlin.gradle.targets.wasm.npm.WasmNpmResolverPlugin
-import org.jetbrains.kotlin.gradle.targets.js.npm.JsNpmResolverPlugin
+import org.jetbrains.kotlin.gradle.targets.js.npm.NpmResolverPlugin
 import org.jetbrains.kotlin.gradle.targets.js.typescript.TypeScriptValidationTask
 import org.jetbrains.kotlin.gradle.tasks.registerTask
 import org.jetbrains.kotlin.gradle.utils.*
@@ -161,7 +161,7 @@ constructor(
 
     private val commonLazyDelegate = lazy {
         targetVariant(
-            { JsNpmResolverPlugin.apply(project) },
+            { NpmResolverPlugin.apply(project) },
             { WasmNpmResolverPlugin.apply(project) },
         )
         compilations.all { compilation ->

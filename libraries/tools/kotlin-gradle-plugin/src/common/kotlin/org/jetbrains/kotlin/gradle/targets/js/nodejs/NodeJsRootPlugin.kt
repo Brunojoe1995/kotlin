@@ -10,7 +10,7 @@ import org.gradle.api.provider.Provider
 import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import org.jetbrains.kotlin.gradle.targets.js.npm.KotlinNpmResolutionManager
 import org.jetbrains.kotlin.gradle.targets.js.npm.LockCopyTask
-import org.jetbrains.kotlin.gradle.targets.js.npm.JsNpmExtension
+import org.jetbrains.kotlin.gradle.targets.js.npm.NpmExtension
 import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnPlugin
 import org.jetbrains.kotlin.gradle.targets.web.nodejs.CommonNodeJsRootPlugin
 import org.jetbrains.kotlin.gradle.targets.web.nodejs.NodeJsRootPluginApplier
@@ -23,8 +23,8 @@ open class NodeJsRootPlugin : CommonNodeJsRootPlugin {
             platformDisambiguate = JsPlatformDisambiguate,
             nodeJsRootKlass = NodeJsRootExtension::class,
             nodeJsRootName = NodeJsRootExtension.EXTENSION_NAME,
-            npmKlass = JsNpmExtension::class,
-            npmName = JsNpmExtension.EXTENSION_NAME,
+            npmKlass = NpmExtension::class,
+            npmName = NpmExtension.EXTENSION_NAME,
             rootDirectoryName = JsPlatformDisambiguate.jsPlatform,
             lockFileDirectory = { it.dir(LockCopyTask.KOTLIN_JS_STORE) },
             singleNodeJsPluginApply = { NodeJsPlugin.apply(it) },

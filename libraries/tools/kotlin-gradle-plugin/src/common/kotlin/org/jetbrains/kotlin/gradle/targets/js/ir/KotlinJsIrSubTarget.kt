@@ -26,7 +26,6 @@ import org.jetbrains.kotlin.gradle.testing.internal.kotlinTestRegistry
 import org.jetbrains.kotlin.gradle.utils.domainObjectSet
 import org.jetbrains.kotlin.gradle.utils.lowerCamelCaseName
 
-
 interface KotlinJsIrSubTargetWithBinary : KotlinJsSubTargetDsl, Named {
     fun processBinary()
 }

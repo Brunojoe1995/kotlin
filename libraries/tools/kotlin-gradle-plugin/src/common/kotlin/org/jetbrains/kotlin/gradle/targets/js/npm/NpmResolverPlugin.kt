@@ -6,21 +6,22 @@
 package org.jetbrains.kotlin.gradle.targets.js.npm
 
 import org.gradle.api.Project
+import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsPlugin
+import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootPlugin
 import org.jetbrains.kotlin.gradle.targets.web.npm.CommonNpmResolverPlugin
+import org.jetbrains.kotlin.gradle.targets.web.npm.NpmResolverPluginApplier
 
-@Deprecated(
-    "Use NpmResolverPlugin instead",
-    ReplaceWith(
-        "NpmResolverPlugin",
-        "org.jetbrains.kotlin.gradle.targets.js.npm.NpmResolverPlugin"
-    )
-)
-open class NpmResolverPlugin : CommonNpmResolverPlugin {
+class NpmResolverPlugin : CommonNpmResolverPlugin {
     override fun apply(project: Project) {
-        project.plugins.apply(JsNpmResolverPlugin::class.java)
+        NpmResolverPluginApplier(
+            { NodeJsRootPlugin.apply(project.rootProject) },
+            { NodeJsPlugin.apply(project) },
+        ).apply(project)
     }
 
     companion object {
-        fun apply(project: Project) = JsNpmResolverPlugin.apply(project)
+        fun apply(project: Project) {
+            project.plugins.apply(NpmResolverPlugin::class.java)
+        }
     }
 }
