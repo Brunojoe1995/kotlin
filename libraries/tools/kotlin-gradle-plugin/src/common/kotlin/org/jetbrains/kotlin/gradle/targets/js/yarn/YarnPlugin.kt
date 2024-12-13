@@ -7,9 +7,9 @@ package org.jetbrains.kotlin.gradle.targets.js.yarn
 
 import org.gradle.api.Project
 import org.jetbrains.kotlin.gradle.targets.js.nodejs.JsPlatformDisambiguate
-import org.jetbrains.kotlin.gradle.targets.js.nodejs.JsNodeJsPlugin.Companion.kotlinNodeJsEnvSpec
-import org.jetbrains.kotlin.gradle.targets.js.nodejs.JsNodeJsRootPlugin
-import org.jetbrains.kotlin.gradle.targets.js.nodejs.JsNodeJsRootPlugin.Companion.kotlinNodeJsRootExtension
+import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsPlugin.Companion.kotlinNodeJsEnvSpec
+import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootPlugin
+import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootPlugin.Companion.kotlinNodeJsRootExtension
 import org.jetbrains.kotlin.gradle.targets.js.npm.LockCopyTask
 import org.jetbrains.kotlin.gradle.targets.web.yarn.CommonYarnPlugin
 
@@ -21,7 +21,7 @@ open class YarnPlugin : CommonYarnPlugin {
             yarnRootName = YarnRootExtension.YARN,
             yarnEnvSpecKlass = YarnRootEnvSpec::class,
             yarnEnvSpecName = YarnRootEnvSpec.YARN,
-            nodeJsRootApply = { JsNodeJsRootPlugin.apply(it) },
+            nodeJsRootApply = { NodeJsRootPlugin.apply(it) },
             nodeJsRootExtension = { it.kotlinNodeJsRootExtension },
             nodeJsEnvSpec = { it.kotlinNodeJsEnvSpec },
             lockFileDirectory = { it.resolve(LockCopyTask.KOTLIN_JS_STORE) },

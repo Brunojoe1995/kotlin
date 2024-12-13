@@ -6,13 +6,13 @@
 package org.jetbrains.kotlin.gradle.targets.js.npm
 
 import org.gradle.api.Project
-import org.jetbrains.kotlin.gradle.targets.js.nodejs.JsNodeJsRootExtension
-import org.jetbrains.kotlin.gradle.targets.js.nodejs.JsNodeJsRootPlugin
+import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootExtension
+import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootPlugin
 
 @Suppress("DEPRECATION")
 open class JsNpmExtension(
     project: Project,
-    nodeJsRoot: JsNodeJsRootExtension,
+    nodeJsRoot: NodeJsRootExtension,
 ) : NpmExtension(
     project,
     nodeJsRoot
@@ -22,7 +22,7 @@ open class JsNpmExtension(
 
         operator fun get(project: Project): JsNpmExtension {
             val rootProject = project.rootProject
-            rootProject.plugins.apply(JsNodeJsRootPlugin::class.java)
+            rootProject.plugins.apply(NodeJsRootPlugin::class.java)
             return rootProject.extensions.getByName(EXTENSION_NAME) as JsNpmExtension
         }
     }

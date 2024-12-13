@@ -15,7 +15,6 @@ import org.jetbrains.kotlin.gradle.targets.js.KotlinWasmTargetType
 import org.jetbrains.kotlin.gradle.targets.js.NpmVersions
 import org.jetbrains.kotlin.gradle.targets.js.RequiredKotlinJsDependency
 import org.jetbrains.kotlin.gradle.targets.js.ir.KotlinJsIrCompilation
-import org.jetbrains.kotlin.gradle.targets.js.ir.KotlinJsIrTarget
 import org.jetbrains.kotlin.gradle.targets.js.npm.RequiresNpmDependencies
 import org.jetbrains.kotlin.gradle.targets.js.npm.npmProject
 import org.jetbrains.kotlin.gradle.targets.js.targetVariant
@@ -101,11 +100,11 @@ constructor(
             val target = compilation.target
             val project = target.project
             val nodeJsRoot = compilation.targetVariant(
-                { JsNodeJsRootPlugin.apply(project.rootProject) },
+                { NodeJsRootPlugin.apply(project.rootProject) },
                 { WasmNodeJsRootPlugin.apply(project.rootProject) },
             )
             val nodeJsEnvSpec = compilation.targetVariant(
-                { JsNodeJsPlugin.apply(project) },
+                { NodeJsPlugin.apply(project) },
                 { WasmNodeJsPlugin.apply(project) },
             )
 

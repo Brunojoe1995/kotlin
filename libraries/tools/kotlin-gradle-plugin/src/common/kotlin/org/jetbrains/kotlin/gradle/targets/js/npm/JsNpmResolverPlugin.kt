@@ -6,16 +6,16 @@
 package org.jetbrains.kotlin.gradle.targets.js.npm
 
 import org.gradle.api.Project
-import org.jetbrains.kotlin.gradle.targets.js.nodejs.JsNodeJsPlugin
-import org.jetbrains.kotlin.gradle.targets.js.nodejs.JsNodeJsRootPlugin
+import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsPlugin
+import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootPlugin
 import org.jetbrains.kotlin.gradle.targets.web.npm.NpmResolverPluginApplier
 
 @Suppress("DEPRECATION")
 class JsNpmResolverPlugin : NpmResolverPlugin() {
     override fun apply(project: Project) {
         NpmResolverPluginApplier(
-            { JsNodeJsRootPlugin.apply(project.rootProject) },
-            { JsNodeJsPlugin.apply(project) },
+            { NodeJsRootPlugin.apply(project.rootProject) },
+            { NodeJsPlugin.apply(project) },
         ).apply(project)
     }
 

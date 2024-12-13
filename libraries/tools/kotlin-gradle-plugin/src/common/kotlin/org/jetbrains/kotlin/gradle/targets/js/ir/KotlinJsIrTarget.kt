@@ -20,8 +20,8 @@ import org.jetbrains.kotlin.gradle.targets.js.dsl.*
 import org.jetbrains.kotlin.gradle.targets.js.ir.KotlinJsIrTargetConfigurator.Companion.configureJsDefaultOptions
 import org.jetbrains.kotlin.gradle.targets.wasm.nodejs.WasmNodeJsPlugin
 import org.jetbrains.kotlin.gradle.targets.wasm.nodejs.WasmNodeJsRootPlugin
-import org.jetbrains.kotlin.gradle.targets.js.nodejs.JsNodeJsRootPlugin
-import org.jetbrains.kotlin.gradle.targets.js.nodejs.JsNodeJsRootPlugin.Companion.kotlinNodeJsRootExtension
+import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootPlugin
+import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootPlugin.Companion.kotlinNodeJsRootExtension
 import org.jetbrains.kotlin.gradle.targets.wasm.npm.WasmNpmResolverPlugin
 import org.jetbrains.kotlin.gradle.targets.js.npm.JsNpmResolverPlugin
 import org.jetbrains.kotlin.gradle.targets.js.typescript.TypeScriptValidationTask
@@ -251,7 +251,7 @@ constructor(
     @OptIn(ExperimentalWasmDsl::class)
     private val d8LazyDelegate = lazy {
         targetVariant(
-            { JsNodeJsRootPlugin.apply(project.rootProject) },
+            { NodeJsRootPlugin.apply(project.rootProject) },
             { WasmNodeJsRootPlugin.apply(project.rootProject) },
         )
 

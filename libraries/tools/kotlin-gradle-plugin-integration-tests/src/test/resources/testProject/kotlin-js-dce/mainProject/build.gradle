@@ -19,7 +19,7 @@ kotlin {
         binaries.executable()
         browser()
 
-        rootProject.plugins.withType(org.jetbrains.kotlin.gradle.targets.js.nodejs.JsNodeJsRootPlugin) {
+        rootProject.plugins.withType(org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootPlugin) {
 //            def kotlinNodeJs = rootProject.extensions.getByType(org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsExtension)
 
             def mainCompilation = compilations["main"]

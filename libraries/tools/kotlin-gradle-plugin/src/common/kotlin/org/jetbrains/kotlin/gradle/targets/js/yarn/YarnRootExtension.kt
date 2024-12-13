@@ -6,12 +6,12 @@
 package org.jetbrains.kotlin.gradle.targets.js.yarn
 
 import org.gradle.api.Project
-import org.jetbrains.kotlin.gradle.targets.js.nodejs.JsNodeJsRootExtension
+import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootExtension
 import org.jetbrains.kotlin.gradle.targets.web.yarn.AbstractYarnRootExtension
 
 open class YarnRootExtension(
     project: Project,
-    nodeJsRoot: JsNodeJsRootExtension,
+    nodeJsRoot: NodeJsRootExtension,
     yarnSpec: YarnRootEnvSpec,
 ) : AbstractYarnRootExtension(
     project,

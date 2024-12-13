@@ -6,7 +6,7 @@
 package org.jetbrains.kotlin.gradle.targets.js.npm
 
 import org.gradle.api.Project
-import org.jetbrains.kotlin.gradle.targets.js.nodejs.JsNodeJsRootExtension
+import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootExtension
 
 @Deprecated(
     "Use JsNpmExtension instead",
@@ -17,7 +17,7 @@ import org.jetbrains.kotlin.gradle.targets.js.nodejs.JsNodeJsRootExtension
 )
 open class NpmExtension(
     project: Project,
-    nodeJsRoot: JsNodeJsRootExtension,
+    nodeJsRoot: NodeJsRootExtension,
 ) : AbstractNpmExtension(
     project,
     nodeJsRoot
