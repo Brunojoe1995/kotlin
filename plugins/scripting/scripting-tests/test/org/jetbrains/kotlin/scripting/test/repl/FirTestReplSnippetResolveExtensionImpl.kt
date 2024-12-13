@@ -7,6 +7,7 @@ package org.jetbrains.kotlin.scripting.test.repl
 
 import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.fir.FirSession
+import org.jetbrains.kotlin.fir.SessionConfiguration
 import org.jetbrains.kotlin.fir.copy
 import org.jetbrains.kotlin.fir.declarations.*
 import org.jetbrains.kotlin.fir.declarations.builder.buildPropertyCopy
@@ -28,8 +29,20 @@ class FirTestReplSnippetResolveExtensionImpl(
     @Suppress("UNUSED_PARAMETER", "unused") hostConfiguration: ScriptingHostConfiguration,
 ) : FirReplSnippetResolveExtension(session) {
 
+    private class FirReplHistoryProviderImpl : FirReplHistoryProvider() {
+        private val history = LinkedHashSet<FirReplSnippetSymbol>()
+
+        override fun getSnippets(): Iterable<FirReplSnippetSymbol> = history.asIterable()
+
+        override fun putSnippet(symbol: FirReplSnippetSymbol) {
+            history.add(symbol)
+        }
+    }
+
+    @OptIn(SessionConfiguration::class)
     private val replHistoryProvider: FirReplHistoryProvider by lazy {
-        session.moduleData.dependencies.firstOrNull()?.session?.replHistoryProvider ?: error("No repl history provider found")
+        session.moduleData.dependencies.firstOrNull()?.session?.replHistoryProvider
+            ?: FirReplHistoryProviderImpl().also { session.sessionProvider?.getSession(session.moduleData.dependencies.first())?.register(FirReplHistoryProvider::class, it) }
     }
 
     @OptIn(SymbolInternals::class)
