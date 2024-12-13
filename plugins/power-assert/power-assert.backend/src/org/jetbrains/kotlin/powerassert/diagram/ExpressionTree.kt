@@ -138,6 +138,9 @@ fun buildTree(
                 if (call != null && expression.isImplicitReceiverOf(call)) {
                     // Do not diagram implicit receivers.
                     data.addChild(ConstantNode(expression))
+                } else if (expression is IrGetObjectValue) {
+                    // Do not transform object access.
+                    data.addChild(ConstantNode(expression))
                 } else if (expression is IrFunctionExpression) {
                     // Do not transform lambda expressions, especially their body.
                     data.addChild(ConstantNode(expression))
