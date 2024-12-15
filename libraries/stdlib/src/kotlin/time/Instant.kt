@@ -267,7 +267,7 @@ public class Instant internal constructor(
 
     public companion object {
         @Deprecated("Use Clock.System.now() instead", ReplaceWith("Clock.System.now()", "kotlin.time.Clock"), level = DeprecationLevel.ERROR)
-        public fun now(): Instant = currentTime()
+        public fun now(): Instant = throw NotImplementedError()
 
         /**
          * Returns an [Instant] that is [epochMilliseconds] number of milliseconds from the epoch instant `1970-01-01T00:00:00Z`.
@@ -410,8 +410,6 @@ public val Instant.isDistantFuture: Boolean
 
 internal const val DISTANT_PAST_SECONDS = -3217862419201
 internal const val DISTANT_FUTURE_SECONDS = 3093527980800
-
-internal expect fun currentTime(): Instant
 
 /**
  * The minimum supported epoch second.
