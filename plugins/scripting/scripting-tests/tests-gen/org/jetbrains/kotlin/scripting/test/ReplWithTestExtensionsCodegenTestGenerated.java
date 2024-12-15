@@ -55,6 +55,12 @@ public class ReplWithTestExtensionsCodegenTestGenerated extends AbstractReplWith
   }
 
   @Test
+  @TestMetadata("nested_class_calls_pure_function.repl.kts")
+  public void testNested_class_calls_pure_function_repl() {
+    runTest("plugins/scripting/scripting-tests/testData/codegen/repl/nested_class_calls_pure_function.repl.kts");
+  }
+
+  @Test
   @TestMetadata("property_with_custom_accessors_different_snippet.repl.kts")
   public void testProperty_with_custom_accessors_different_snippet_repl() {
     runTest("plugins/scripting/scripting-tests/testData/codegen/repl/property_with_custom_accessors_different_snippet.repl.kts");
