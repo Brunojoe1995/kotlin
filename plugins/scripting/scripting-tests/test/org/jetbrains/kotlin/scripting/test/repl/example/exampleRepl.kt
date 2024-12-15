@@ -26,17 +26,22 @@ import org.jetbrains.kotlin.scripting.compiler.plugin.impl.currentLineId
 import org.jetbrains.kotlin.scripting.compiler.plugin.repl.ReplFromTerminal.WhatNextAfterOneLine
 import org.jetbrains.kotlin.scripting.compiler.plugin.repl.configuration.ConsoleReplConfiguration
 import org.jetbrains.kotlin.scripting.compiler.plugin.repl.configuration.ReplConfiguration
+import org.jetbrains.kotlin.scripting.test.repl.FirReplHistoryProviderImpl
 import org.jetbrains.kotlin.scripting.test.repl.TestReplCompilerPluginRegistrar
+import org.jetbrains.kotlin.scripting.test.repl.firReplHistoryProvider
 import kotlin.reflect.KClass
 import kotlin.script.experimental.api.ResultWithDiagnostics
 import kotlin.script.experimental.api.ScriptCompilationConfiguration
 import kotlin.script.experimental.api.ScriptEvaluationConfiguration
 import kotlin.script.experimental.api.repl
 import kotlin.script.experimental.api.with
+import kotlin.script.experimental.host.ScriptingHostConfiguration
 import kotlin.script.experimental.host.toScriptSource
 import kotlin.script.experimental.impl.internalScriptingRunSuspend
 import kotlin.script.experimental.jvm.baseClassLoader
 import kotlin.script.experimental.jvm.defaultJvmScriptingHostConfiguration
+import kotlin.script.experimental.jvm.dependenciesFromClassloader
+import kotlin.script.experimental.jvm.dependenciesFromCurrentContext
 import kotlin.script.experimental.jvm.impl.KJvmCompiledScript
 import kotlin.script.experimental.jvm.jvm
 import kotlin.script.experimental.jvm.util.isIncomplete
@@ -62,14 +67,21 @@ private class ExampleRepl(val replConfiguration: ReplConfiguration, rootDisposab
 
     private val writer = replConfiguration.writer
     private val messageCollector = ScriptDiagnosticsMessageCollector(ReplMessageCollector(replConfiguration))
-    private val scriptCompilationConfiguration = ScriptCompilationConfiguration()
+    private val scriptCompilationConfiguration = ScriptCompilationConfiguration {
+        jvm {
+            dependenciesFromClassloader(classLoader = ExampleRepl::class.java.classLoader, wholeClasspath = true)
+        }
+    }
+    val hostConfiguration = ScriptingHostConfiguration(defaultJvmScriptingHostConfiguration) {
+        firReplHistoryProvider(FirReplHistoryProviderImpl())
+    }
     private val compilerContext = createIsolatedCompilationContext(
         scriptCompilationConfiguration,
-        defaultJvmScriptingHostConfiguration,
+        hostConfiguration,
         messageCollector,
         rootDisposable
     ) {
-        add(CompilerPluginRegistrar.COMPILER_PLUGIN_REGISTRARS, TestReplCompilerPluginRegistrar())
+        add(CompilerPluginRegistrar.COMPILER_PLUGIN_REGISTRARS, TestReplCompilerPluginRegistrar(hostConfiguration))
     }
 
     private val compiler = ScriptJvmCompilerFromEnvironment(compilerContext.environment)

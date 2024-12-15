@@ -7,43 +7,41 @@ package org.jetbrains.kotlin.scripting.test.repl
 
 import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.fir.FirSession
-import org.jetbrains.kotlin.fir.SessionConfiguration
 import org.jetbrains.kotlin.fir.copy
 import org.jetbrains.kotlin.fir.declarations.*
 import org.jetbrains.kotlin.fir.declarations.builder.buildPropertyCopy
 import org.jetbrains.kotlin.fir.declarations.utils.originalReplSnippetSymbol
 import org.jetbrains.kotlin.fir.extensions.FirReplHistoryProvider
 import org.jetbrains.kotlin.fir.extensions.FirReplSnippetResolveExtension
-import org.jetbrains.kotlin.fir.extensions.replHistoryProvider
-import org.jetbrains.kotlin.fir.moduleData
 import org.jetbrains.kotlin.fir.scopes.FirScope
 import org.jetbrains.kotlin.fir.symbols.SymbolInternals
 import org.jetbrains.kotlin.fir.symbols.impl.*
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.scripting.resolve.FirReplHistoryScope
 import kotlin.script.experimental.host.ScriptingHostConfiguration
+import kotlin.script.experimental.host.ScriptingHostConfigurationKeys
+import kotlin.script.experimental.util.PropertiesCollection
+
+val ScriptingHostConfigurationKeys.firReplHistoryProvider by PropertiesCollection.key<FirReplHistoryProvider>(isTransient = true)
+
+class FirReplHistoryProviderImpl : FirReplHistoryProvider() {
+    private val history = LinkedHashSet<FirReplSnippetSymbol>()
+
+    override fun getSnippets(): Iterable<FirReplSnippetSymbol> = history.asIterable()
+
+    override fun putSnippet(symbol: FirReplSnippetSymbol) {
+        history.add(symbol)
+    }
+}
+
 
 class FirTestReplSnippetResolveExtensionImpl(
     session: FirSession,
-    // TODO: left here because it seems it will be needed soon, remove suppression if used or remove the param if it is not the case
-    @Suppress("UNUSED_PARAMETER", "unused") hostConfiguration: ScriptingHostConfiguration,
+    hostConfiguration: ScriptingHostConfiguration,
 ) : FirReplSnippetResolveExtension(session) {
 
-    private class FirReplHistoryProviderImpl : FirReplHistoryProvider() {
-        private val history = LinkedHashSet<FirReplSnippetSymbol>()
-
-        override fun getSnippets(): Iterable<FirReplSnippetSymbol> = history.asIterable()
-
-        override fun putSnippet(symbol: FirReplSnippetSymbol) {
-            history.add(symbol)
-        }
-    }
-
-    @OptIn(SessionConfiguration::class)
-    private val replHistoryProvider: FirReplHistoryProvider by lazy {
-        session.moduleData.dependencies.firstOrNull()?.session?.replHistoryProvider
-            ?: FirReplHistoryProviderImpl().also { session.sessionProvider?.getSession(session.moduleData.dependencies.first())?.register(FirReplHistoryProvider::class, it) }
-    }
+    private val replHistoryProvider: FirReplHistoryProvider =
+        hostConfiguration[ScriptingHostConfiguration.firReplHistoryProvider]!!
 
     @OptIn(SymbolInternals::class)
     override fun getSnippetScope(currentSnippet: FirReplSnippet, useSiteSession: FirSession): FirScope? {

@@ -38,5 +38,3 @@ abstract class FirReplHistoryProvider : FirSessionComponent {
     abstract fun putSnippet(symbol: FirReplSnippetSymbol)
 }
 
-val FirSession.replHistoryProvider: FirReplHistoryProvider by FirSession.sessionComponentAccessor()
-

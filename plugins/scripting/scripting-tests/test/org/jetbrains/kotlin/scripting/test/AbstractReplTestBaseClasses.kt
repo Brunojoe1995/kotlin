@@ -13,7 +13,9 @@ import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.psi.KtFile
+import org.jetbrains.kotlin.scripting.test.repl.FirReplHistoryProviderImpl
 import org.jetbrains.kotlin.scripting.test.repl.TestReplCompilerPluginRegistrar
+import org.jetbrains.kotlin.scripting.test.repl.firReplHistoryProvider
 import org.jetbrains.kotlin.test.FirParser
 import org.jetbrains.kotlin.test.backend.handlers.JvmBinaryArtifactHandler
 import org.jetbrains.kotlin.test.backend.handlers.computeTestRuntimeClasspath
@@ -38,6 +40,8 @@ import org.jetbrains.kotlin.test.services.configuration.JvmEnvironmentConfigurat
 import org.jetbrains.kotlin.test.services.standardLibrariesPathProvider
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
+import kotlin.script.experimental.host.ScriptingHostConfiguration
+import kotlin.script.experimental.jvm.defaultJvmScriptingHostConfiguration
 
 open class AbstractReplWithTestExtensionsDiagnosticsTest : AbstractKotlinCompilerTest() {
     override fun TestConfigurationBuilder.configuration() {
@@ -78,7 +82,11 @@ open class AbstractReplWithTestExtensionsCodegenTest : AbstractFirScriptAndReplC
 @OptIn(ExperimentalCompilerApi::class)
 private class ReplConfigurator(testServices: TestServices) : EnvironmentConfigurator(testServices) {
     override fun configureCompilerConfiguration(configuration: CompilerConfiguration, module: TestModule) {
-        configuration.add(CompilerPluginRegistrar.COMPILER_PLUGIN_REGISTRARS, TestReplCompilerPluginRegistrar())
+        val hostConfiguration = ScriptingHostConfiguration(defaultJvmScriptingHostConfiguration) {
+            firReplHistoryProvider(FirReplHistoryProviderImpl())
+            // TODO: add jdk path and other params if needed
+        }
+        configuration.add(CompilerPluginRegistrar.COMPILER_PLUGIN_REGISTRARS, TestReplCompilerPluginRegistrar(hostConfiguration))
     }
 }
 
