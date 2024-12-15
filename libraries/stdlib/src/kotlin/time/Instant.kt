@@ -457,7 +457,7 @@ private class UnboundedLocalDateTime(
             epochDays * 86400L + daySeconds - offsetSeconds
         }
         if (epochSeconds < Instant.MIN.epochSeconds || epochSeconds > Instant.MAX.epochSeconds)
-            throw IllegalArgumentException(
+            throw InstantFormatException(
                 "The parsed date is outside the range representable by Instant (Unix epoch second $epochSeconds)"
             )
         return Instant.fromEpochSeconds(epochSeconds, nanosecond)
@@ -512,7 +512,7 @@ private class UnboundedLocalDateTime(
 
 private fun parseIso(isoString: CharSequence): Instant {
     fun parseFailure(error: String): Nothing {
-        throw IllegalArgumentException("$error when parsing an Instant from $isoString")
+        throw InstantFormatException("$error when parsing an Instant from $isoString")
     }
     fun expect(what: String, where: Int, predicate: (Char) -> Boolean) {
         val c = isoString[where]
@@ -772,3 +772,5 @@ private val POWERS_OF_TEN = intArrayOf(
     100000000,
     1000000000
 )
+
+private class InstantFormatException(message: String) : IllegalArgumentException(message)
