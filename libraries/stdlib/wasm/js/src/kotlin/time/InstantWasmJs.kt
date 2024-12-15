@@ -5,7 +5,8 @@
 
 package kotlin.time
 
-internal actual fun currentTime(): Instant = Instant.fromEpochMilliseconds(Date().getTime().toLong())
+internal actual fun systemClockNow(): Instant =
+    Instant.fromEpochMilliseconds(Date().getTime().toLong())
 
 private external class Date {
     fun getTime(): Double

@@ -49,9 +49,11 @@ public interface Clock {
      * @sample samples.time.Clocks.dependencyInjection
      */
     public object System : Clock {
-        override fun now(): Instant = @Suppress("DEPRECATION_ERROR") Instant.now()
+        override fun now(): Instant = systemClockNow()
     }
 
     /** A companion object used purely for namespacing. */
     public companion object
 }
+
+internal expect fun systemClockNow(): Instant

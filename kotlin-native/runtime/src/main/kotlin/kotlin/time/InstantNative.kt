@@ -9,7 +9,7 @@ import kotlinx.cinterop.*
 import platform.posix.*
 
 @OptIn(ExperimentalForeignApi::class)
-internal actual fun currentTime(): Instant = memScoped {
+internal actual fun systemClockNow(): Instant = memScoped {
     val tm = alloc<timespec>()
     val error = clock_gettime(CLOCK_REALTIME.convert(), tm.ptr)
     check(error == 0) { "Error when reading the system clock: ${strerror(errno)?.toKString() ?: "Unknown error"}" }
