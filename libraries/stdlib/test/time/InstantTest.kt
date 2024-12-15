@@ -63,8 +63,8 @@ class InstantTest {
         val pow2_32 = 1L shl 32
         val instant1 = Instant.fromEpochSeconds(0)
         val instant2 = instant1.plus(pow2_32.toDuration(DurationUnit.NANOSECONDS))
-        assertEquals(pow2_32 / NANOS_PER_ONE, instant2.epochSeconds)
-        assertEquals(pow2_32 % NANOS_PER_ONE, instant2.nanosecondsOfSecond.toLong())
+        assertEquals(pow2_32 / NANOS_PER_SECOND, instant2.epochSeconds)
+        assertEquals(pow2_32 % NANOS_PER_SECOND, instant2.nanosecondsOfSecond.toLong())
 
         val instant3 = instant1.plus(pow2_32.toDuration(DurationUnit.SECONDS))
         assertEquals(pow2_32, instant3.epochSeconds)

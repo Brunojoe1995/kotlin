@@ -136,7 +136,7 @@ public class Instant internal constructor(
     // org.threeten.bp.Instant#toEpochMilli
     public fun toEpochMilliseconds(): Long = try {
         if (epochSeconds >= 0) {
-            val millis = safeMultiply(epochSeconds, MILLIS_PER_ONE.toLong())
+            val millis = safeMultiply(epochSeconds, MILLIS_PER_SECOND.toLong())
             safeAdd(millis, (nanosecondsOfSecond / NANOS_PER_MILLI).toLong())
         } else {
             // prevent an overflow in seconds * 1000
@@ -145,8 +145,8 @@ public class Instant internal constructor(
             // we go from the second closer to 0 away from 0
             // that way we always stay in the valid long range
             // seconds + 1 can not overflow because it is negative
-            val millis = safeMultiply(epochSeconds + 1, MILLIS_PER_ONE.toLong())
-            safeAdd(millis, (nanosecondsOfSecond / NANOS_PER_MILLI - MILLIS_PER_ONE).toLong())
+            val millis = safeMultiply(epochSeconds + 1, MILLIS_PER_SECOND.toLong())
+            safeAdd(millis, (nanosecondsOfSecond / NANOS_PER_MILLI - MILLIS_PER_SECOND).toLong())
         }
     } catch (_: ArithmeticException) {
         if (epochSeconds > 0) Long.MAX_VALUE else Long.MIN_VALUE
@@ -161,9 +161,9 @@ public class Instant internal constructor(
         if ((secondsToAdd or nanosToAdd) == 0L) {
             return this
         }
-        val newEpochSeconds: Long = safeAdd(safeAdd(epochSeconds, secondsToAdd), (nanosToAdd / NANOS_PER_ONE))
-        val newNanosToAdd = nanosToAdd % NANOS_PER_ONE
-        val nanoAdjustment = (nanosecondsOfSecond + newNanosToAdd) // safe int+NANOS_PER_ONE
+        val newEpochSeconds: Long = safeAdd(safeAdd(epochSeconds, secondsToAdd), (nanosToAdd / NANOS_PER_SECOND))
+        val newNanosToAdd = nanosToAdd % NANOS_PER_SECOND
+        val nanoAdjustment = (nanosecondsOfSecond + newNanosToAdd) // safe int+NANOS_PER_SECOND
         return fromEpochSecondsThrowing(newEpochSeconds, nanoAdjustment)
     }
 
@@ -281,8 +281,8 @@ public class Instant internal constructor(
          */
         // org.threeten.bp.Instant#ofEpochMilli
         public fun fromEpochMilliseconds(epochMilliseconds: Long): Instant {
-            val epochSeconds = epochMilliseconds.floorDiv(MILLIS_PER_ONE.toLong())
-            val nanosecondsOfSecond = (epochMilliseconds.mod(MILLIS_PER_ONE.toLong()) * NANOS_PER_MILLI).toInt()
+            val epochSeconds = epochMilliseconds.floorDiv(MILLIS_PER_SECOND.toLong())
+            val nanosecondsOfSecond = (epochMilliseconds.mod(MILLIS_PER_SECOND.toLong()) * NANOS_PER_MILLI).toInt()
             return when {
                 epochSeconds < MIN_SECOND -> MIN
                 epochSeconds > MAX_SECOND -> MAX
@@ -380,8 +380,8 @@ public class Instant internal constructor(
          * @throws IllegalArgumentException if the boundaries of Instant are overflown
          */
         private fun fromEpochSecondsThrowing(epochSeconds: Long, nanosecondAdjustment: Long): Instant {
-            val secs = safeAdd(epochSeconds, nanosecondAdjustment.floorDiv(NANOS_PER_ONE.toLong()))
-            val nos = nanosecondAdjustment.mod(NANOS_PER_ONE.toLong()).toInt()
+            val secs = safeAdd(epochSeconds, nanosecondAdjustment.floorDiv(NANOS_PER_SECOND.toLong()))
+            val nos = nanosecondAdjustment.mod(NANOS_PER_SECOND.toLong()).toInt()
             return Instant(secs, nos)
         }
 
@@ -743,9 +743,9 @@ private const val HOURS_PER_DAY = 24
 
 private const val SECONDS_PER_DAY: Int = SECONDS_PER_HOUR * HOURS_PER_DAY
 
-internal const val NANOS_PER_ONE = 1_000_000_000
+internal const val NANOS_PER_SECOND = 1_000_000_000
 private const val NANOS_PER_MILLI = 1_000_000
-private const val MILLIS_PER_ONE = 1_000
+private const val MILLIS_PER_SECOND = 1_000
 
 // org.threeten.bp.chrono.IsoChronology#isLeapYear
 internal fun isLeapYear(year: Int): Boolean {

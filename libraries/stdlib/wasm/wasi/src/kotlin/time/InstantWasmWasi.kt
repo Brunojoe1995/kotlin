@@ -7,5 +7,5 @@ package kotlin.time
 
 internal actual fun systemClockNow(): Instant = clockTimeGet().let { time ->
     // Instant.MAX and Instant.MIN are never going to be exceeded using just the Long number of nanoseconds
-    Instant(time.floorDiv(NANOS_PER_ONE.toLong()), time.mod(NANOS_PER_ONE.toLong()).toInt())
+    Instant(time.floorDiv(NANOS_PER_SECOND.toLong()), time.mod(NANOS_PER_SECOND.toLong()).toInt())
 }
