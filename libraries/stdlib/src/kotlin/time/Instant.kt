@@ -157,7 +157,7 @@ public class Instant internal constructor(
      * @throws ArithmeticException if arithmetic overflow occurs
      * @throws IllegalArgumentException if the boundaries of Instant are overflown
      */
-    internal fun plus(secondsToAdd: Long, nanosToAdd: Long): Instant {
+    private fun plusThrowing(secondsToAdd: Long, nanosToAdd: Long): Instant {
         if ((secondsToAdd or nanosToAdd) == 0L) {
             return this
         }
@@ -183,7 +183,7 @@ public class Instant internal constructor(
      */
     public operator fun plus(duration: Duration): Instant = duration.toComponents { secondsToAdd, nanosecondsToAdd ->
         try {
-            plus(secondsToAdd, nanosecondsToAdd.toLong())
+            plusThrowing(secondsToAdd, nanosecondsToAdd.toLong())
         } catch (_: IllegalArgumentException) {
             if (duration.isPositive()) MAX else MIN
         } catch (_: ArithmeticException) {
@@ -408,8 +408,8 @@ public val Instant.isDistantFuture: Boolean
 
 // internal utilities
 
-internal const val DISTANT_PAST_SECONDS = -3217862419201
-internal const val DISTANT_FUTURE_SECONDS = 3093527980800
+private const val DISTANT_PAST_SECONDS = -3217862419201
+private const val DISTANT_FUTURE_SECONDS = 3093527980800
 
 /**
  * The minimum supported epoch second.
