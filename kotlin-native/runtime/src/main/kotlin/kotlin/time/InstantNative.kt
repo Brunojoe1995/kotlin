@@ -20,3 +20,6 @@ internal actual fun systemClockNow(): Instant = memScoped {
         throw IllegalStateException("The readings from the system clock (${tm.tv_sec} seconds, ${tm.tv_nsec} nanoseconds) are not representable as an Instant")
     }
 }
+
+internal actual fun serializedInstant(instant: Instant): Any =
+    throw UnsupportedOperationException("Serialization is supported only in Kotlin/JVM")

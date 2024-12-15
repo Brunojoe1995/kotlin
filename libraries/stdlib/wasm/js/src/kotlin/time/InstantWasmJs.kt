@@ -11,3 +11,6 @@ internal actual fun systemClockNow(): Instant =
 private external class Date {
     fun getTime(): Double
 }
+
+internal actual fun serializedInstant(instant: Instant): Any =
+    throw UnsupportedOperationException("Serialization is supported only in Kotlin/JVM")

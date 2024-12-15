@@ -116,7 +116,7 @@ public class Instant internal constructor(
      * @sample samples.time.Instants.nanosecondsOfSecond
      */
     public val nanosecondsOfSecond: Int
-) : Comparable<Instant> {
+) : Comparable<Instant>, Serializable {
 
     init {
         require(epochSeconds in MIN_SECOND..MAX_SECOND) { "Instant exceeds minimum or maximum instant" }
@@ -265,6 +265,8 @@ public class Instant internal constructor(
      */
     public override fun toString(): String = formatIso(this)
 
+    private fun writeReplace(): Any = serializedInstant(this)
+
     public companion object {
         @Deprecated("Use Clock.System.now() instead", ReplaceWith("Clock.System.now()", "kotlin.time.Clock"), level = DeprecationLevel.ERROR)
         public fun now(): Instant = throw NotImplementedError()
@@ -407,6 +409,8 @@ public val Instant.isDistantFuture: Boolean
     get() = this >= Instant.DISTANT_FUTURE
 
 // internal utilities
+
+internal expect fun serializedInstant(instant: Instant): Any
 
 private const val DISTANT_PAST_SECONDS = -3217862419201
 private const val DISTANT_FUTURE_SECONDS = 3093527980800
