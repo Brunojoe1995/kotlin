@@ -248,9 +248,8 @@ public class Instant internal constructor(
         this === other || other is Instant && this.epochSeconds == other.epochSeconds
                 && this.nanosecondsOfSecond == other.nanosecondsOfSecond
 
-    // org.threeten.bp.Instant#hashCode
     override fun hashCode(): Int =
-        (epochSeconds xor (epochSeconds ushr 32)).toInt() + 51 * nanosecondsOfSecond
+        epochSeconds.hashCode() + 51 * nanosecondsOfSecond
 
     /**
      * Converts this instant to the ISO 8601 string representation, for example, `2023-01-02T23:40:57.120Z`.
