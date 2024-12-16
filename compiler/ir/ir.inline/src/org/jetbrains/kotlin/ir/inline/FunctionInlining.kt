@@ -383,11 +383,11 @@ open class FunctionInlining(
                 val functionArgument = substituteMap[dispatchReceiver.symbol.owner] ?: return super.visitCall(expression)
                 if ((dispatchReceiver.symbol.owner as? IrValueParameter)?.isNoinline == true) return super.visitCall(expression)
 
-                fun IrCall.asCallOf(function: IrSimpleFunction, boundArguments: List<IrExpression>): IrCall {
+                fun asCallOf(function: IrSimpleFunction, boundArguments: List<IrExpression>): IrCall {
                     return IrCallImpl.fromSymbolOwner(expression.startOffset, expression.endOffset, function.symbol).also {
                         it.type = expression.type
                         val arguments = boundArguments.map { it.deepCopyWithSymbols() } +
-                                getAllArgumentsWithIr().map { it.second }.drop(1) // dropping dispatch receiver - it's lambda itself
+                                expression.getAllArgumentsWithIr().map { it.second }.drop(1) // dropping dispatch receiver - it's lambda itself
                         for ((index, argument) in arguments.withIndex()) {
                             it.arguments[index] = argument
                         }
@@ -407,13 +407,13 @@ open class FunctionInlining(
                     }
 
                     functionArgument is IrFunctionExpression ->
-                        inlineFunctionExpression(expression.asCallOf(functionArgument.function, emptyList()), functionArgument.function, functionArgument)
+                        inlineFunctionExpression(asCallOf(functionArgument.function, emptyList()), functionArgument.function, functionArgument)
 
                     functionArgument is IrRichFunctionReference ->
-                        inlineFunctionExpression(expression.asCallOf(functionArgument.invokeFunction, functionArgument.boundValues), functionArgument.invokeFunction, expression)
+                        inlineFunctionExpression(asCallOf(functionArgument.invokeFunction, functionArgument.boundValues), functionArgument.invokeFunction, functionArgument.attributeOwnerId)
 
                     functionArgument is IrRichPropertyReference ->
-                        inlineFunctionExpression(expression.asCallOf(functionArgument.getterFunction, functionArgument.boundValues), functionArgument.getterFunction, expression)
+                        inlineFunctionExpression(asCallOf(functionArgument.getterFunction, functionArgument.boundValues), functionArgument.getterFunction, functionArgument.attributeOwnerId)
 
                     else ->
                         super.visitCall(expression)
@@ -756,16 +756,19 @@ open class FunctionInlining(
                 for (i in expressions.indices) {
                     val irExpression = expressions[i].transform(ParameterSubstitutor(), data = null)
 
-                    val newVariable = currentScope.scope.createTemporaryVariable(
-                        startOffset = irExpression.startOffset, // TODO: it's different condition above
-                        endOffset = irExpression.endOffset,
-                        irExpression = irExpression,
-                        nameHint = callee.symbol.owner.name.asStringStripSpecialMarkers() + "_${parameters[i].name}",
-                        isMutable = false,
-                        origin = IrDeclarationOrigin.IR_TEMPORARY_VARIABLE_FOR_INLINED_PARAMETER,
-                    )
+                    val newVariable =
+                        if (irExpression is IrGetValue && irExpression.symbol.owner.isImmutable && irExpression.type == parameters[i].type) {
+                            irExpression.symbol.owner
+                        } else {
+                            currentScope.scope.createTemporaryVariable(
+                                startOffset = irExpression.startOffset,
+                                endOffset = irExpression.endOffset,
+                                irExpression = irExpression.doImplicitCastIfNeededTo(parameters[i].type),
+                                nameHint = callee.symbol.owner.name.asStringStripSpecialMarkers() + "_${parameters[i].name}",
+                                isMutable = false,
+                            ).also { add(it) }
+                        }
                     expressions[i] = irGetValueWithoutLocation(newVariable.symbol)
-                    add(newVariable)
                 }
             }
         }
@@ -773,6 +776,8 @@ open class FunctionInlining(
         private fun evaluateArguments(
             callSite: IrFunctionAccessExpression, callee: IrFunction
         ): Triple<List<IrVariable>, List<IrVariable>, List<IrVariable>> {
+            // This list stores temp variables that represent non-default arguments of inline call.
+            // The expressions that represent these arguments must be evaluated outside the inline block (at call-site).
             val evaluationStatements = mutableListOf<IrVariable>()
             // This list stores temp variables that represent default arguments of inline call, and they must be evaluated at the callee-site.
             val evaluationStatementsFromDefault = mutableListOf<IrVariable>()
