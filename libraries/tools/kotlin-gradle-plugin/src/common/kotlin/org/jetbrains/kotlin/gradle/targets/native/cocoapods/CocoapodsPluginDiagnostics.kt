@@ -9,11 +9,12 @@ import org.jetbrains.kotlin.gradle.InternalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.plugin.PropertiesProvider
 import org.jetbrains.kotlin.gradle.plugin.diagnostics.ToolingDiagnostic.Severity.*
 import org.jetbrains.kotlin.gradle.plugin.diagnostics.ToolingDiagnosticFactory
+import org.jetbrains.kotlin.gradle.plugin.diagnostics.ToolingDiagnosticGroup.*
 
 @InternalKotlinGradlePluginApi // used in integration tests
 object CocoapodsPluginDiagnostics {
 
-    object DeprecatedPropertiesUsed : ToolingDiagnosticFactory(WARNING) {
+    object DeprecatedPropertiesUsed : ToolingDiagnosticFactory(WARNING, CocoaPodsDiagnosticGroup) {
         operator fun invoke(usedDeprecatedProperties: List<String>) = build {
             name {
                 "Deprecated Properties Used"
@@ -31,7 +32,7 @@ object CocoapodsPluginDiagnostics {
         }
     }
 
-    object LinkOnlyUsedWithStaticFramework : ToolingDiagnosticFactory(WARNING) {
+    object LinkOnlyUsedWithStaticFramework : ToolingDiagnosticFactory(WARNING, CocoaPodsDiagnosticGroup) {
         operator fun invoke(podName: String) = build {
             name {
                 "Link-Only Option Ignored"
@@ -48,7 +49,7 @@ object CocoapodsPluginDiagnostics {
         }
     }
 
-    object UnsupportedOs : ToolingDiagnosticFactory(WARNING) {
+    object UnsupportedOs : ToolingDiagnosticFactory(WARNING, CocoaPodsDiagnosticGroup) {
         operator fun invoke() = build {
             name {
                 "Unsupported Operating System"
@@ -62,7 +63,7 @@ object CocoapodsPluginDiagnostics {
         }
     }
 
-    object InteropBindingSelfDependency : ToolingDiagnosticFactory(ERROR) {
+    object InteropBindingSelfDependency : ToolingDiagnosticFactory(ERROR, CocoaPodsDiagnosticGroup) {
         operator fun invoke(podName: String) = build {
             name {
                 "Self-Referential Interop-Binding Dependency"
@@ -76,7 +77,7 @@ object CocoapodsPluginDiagnostics {
         }
     }
 
-    object InteropBindingUnknownDependency : ToolingDiagnosticFactory(ERROR) {
+    object InteropBindingUnknownDependency : ToolingDiagnosticFactory(ERROR, CocoaPodsDiagnosticGroup) {
         operator fun invoke(podName: String, dependencyName: String) = build {
             name {
                 "Unknown Interop-Binding Dependency"
@@ -90,7 +91,7 @@ object CocoapodsPluginDiagnostics {
         }
     }
 
-    object EmbedAndSignUsedWithPodDependencies : ToolingDiagnosticFactory(FATAL) {
+    object EmbedAndSignUsedWithPodDependencies : ToolingDiagnosticFactory(FATAL, CocoaPodsDiagnosticGroup) {
         operator fun invoke() = build {
             name {
                 "Incompatible 'embedAndSign' Task with Pod Dependencies"
