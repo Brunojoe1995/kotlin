@@ -14,6 +14,14 @@ import org.jetbrains.kotlin.utils.exceptions.errorWithAttachment
 import java.lang.ref.WeakReference
 
 abstract class KaBaseCachedSymbolPointer<out S : KaSymbol>(originalSymbol: S?) : KaSymbolPointer<S>() {
+    /**
+     * This property can have three values:
+     *
+     * 1. **null** – cache is not initialized, so it can be initialized with the next [restoreSymbol]
+     * 2. [NOT_CACHED] – the symbol cannot be cached, so [restoreSymbol] should delegate directly to [restoreIfNotCached]
+     * 3. [WeakReference] – the symbol is cacheable, [cachedSymbol] stores the result of the latest [restoreIfNotCached] call
+     */
+    private var cachedSymbol: Any? = null
 
     init {
         originalSymbol?.let(::cacheWithIsCacheableCheck)
@@ -47,15 +55,6 @@ abstract class KaBaseCachedSymbolPointer<out S : KaSymbol>(originalSymbol: S?) :
             withEntry("cachedSymbol", cachedSymbol.toString())
         }
     }
-
-    /**
-     * This property can have three values:
-     *
-     * 1. **null** – cache is not initialized, so it can be initialized with the next [restoreSymbol]
-     * 2. [NOT_CACHED] – the symbol cannot be cached, so [restoreSymbol] should delegate directly to [restoreIfNotCached]
-     * 3. [WeakReference] – the symbol is cacheable, [cachedSymbol] stores the result of the latest [restoreIfNotCached] call
-     */
-    private var cachedSymbol: Any? = null
 
     private fun cacheWithIsCacheableCheck(symbol: S) {
         cachedSymbol = if (symbol.isCacheable) WeakReference(symbol) else NOT_CACHED
