@@ -1,4 +1,5 @@
-// IDENTICAL_KLIB_SYNTHETIC_ACCESSOR_DUMPS
+// IGNORE_KLIB_SYNTHETIC_ACCESSORS_CHECKS: JS_IR
+// ^^^ Muted because accessor for function/constructor/property references are not generated for JS and first stage. To be fixed in KT-69797.
 
 class A {
     private var privateVar = 22
