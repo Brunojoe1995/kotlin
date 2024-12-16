@@ -1,0 +1,13 @@
+test1: ---
+asserter.assert(hello == "World")
+|               |     |
+|               |     false
+|               Hello
+Asserter
+---
+test2: ---
+assert(hello == "World")
+       |     |
+       |     false
+       Hello
+---

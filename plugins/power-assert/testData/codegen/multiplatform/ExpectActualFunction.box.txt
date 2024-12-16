@@ -1,0 +1,6 @@
+test1: ---
+assert(hello == "World")
+       |     |
+       |     false
+       Hello
+---

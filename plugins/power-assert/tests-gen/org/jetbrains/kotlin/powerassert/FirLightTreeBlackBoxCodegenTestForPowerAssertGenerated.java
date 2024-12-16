@@ -648,6 +648,28 @@ public class FirLightTreeBlackBoxCodegenTestForPowerAssertGenerated extends Abst
   }
 
   @Nested
+  @TestMetadata("plugins/power-assert/testData/codegen/multiplatform")
+  @TestDataPath("$PROJECT_ROOT")
+  public class Multiplatform {
+    @Test
+    public void testAllFilesPresentInMultiplatform() {
+      KtTestUtil.assertAllTestsPresentByMetadataWithExcluded(this.getClass(), new File("plugins/power-assert/testData/codegen/multiplatform"), Pattern.compile("^(.+)\\.kt$"), Pattern.compile("^(.+)\\.fir\\.kts?$"), TargetBackend.JVM_IR, true);
+    }
+
+    @Test
+    @TestMetadata("ExpectActualClass.kt")
+    public void testExpectActualClass() {
+      runTest("plugins/power-assert/testData/codegen/multiplatform/ExpectActualClass.kt");
+    }
+
+    @Test
+    @TestMetadata("ExpectActualFunction.kt")
+    public void testExpectActualFunction() {
+      runTest("plugins/power-assert/testData/codegen/multiplatform/ExpectActualFunction.kt");
+    }
+  }
+
+  @Nested
   @TestMetadata("plugins/power-assert/testData/codegen/nullsafe")
   @TestDataPath("$PROJECT_ROOT")
   public class Nullsafe {
