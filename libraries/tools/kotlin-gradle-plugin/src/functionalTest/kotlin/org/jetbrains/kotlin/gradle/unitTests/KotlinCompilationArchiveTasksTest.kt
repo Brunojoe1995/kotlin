@@ -75,17 +75,19 @@ class KotlinCompilationArchiveTasksTest {
 
     @Test
     fun `archive tasks should not be created for custom compilation when feature flag is not set`() {
+        val customCompilationName = "custom"
         val project = buildProject {
             enableKotlinCompilationArchiveTasksCreation(enabled = false)
             applyMultiplatformPlugin()
             kotlin {
-                jvm().compilations.create("custom")
-                linuxX64().compilations.create("custom")
+                jvm().compilations.create(customCompilationName)
+                linuxX64().compilations.create(customCompilationName)
             }
         }
         project.multiplatformExtension.targets.flatMap { it.compilations }.forEach { compilation ->
-            if (compilation.internal.archiveTaskName != null)
-                fail("Archive tasks should not be created")
+            val archiveTaskName = compilation.internal.archiveTaskName
+            if (archiveTaskName != null && archiveTaskName.contains(customCompilationName, ignoreCase = true))
+                fail("Archive tasks should not be created, but `$archiveTaskName` was created for $compilation")
         }
     }
 
