@@ -94,6 +94,8 @@ import kotlin.time.Duration.Companion.seconds
  * instant.toString() // 2023-01-02T21:35:01Z
  * ```
  */
+@SinceKotlin("2.1")
+@ExperimentalTime
 public class Instant internal constructor(
     /**
      * The number of seconds from the epoch instant `1970-01-01T00:00:00Z` rounded down to a [Long] number.
@@ -396,6 +398,8 @@ public class Instant internal constructor(
  *
  * @sample samples.time.Instants.isDistantPast
  */
+@SinceKotlin("2.1")
+@ExperimentalTime
 public val Instant.isDistantPast: Boolean
     get() = this <= Instant.DISTANT_PAST
 
@@ -404,11 +408,14 @@ public val Instant.isDistantPast: Boolean
  *
  * @sample samples.time.Instants.isDistantFuture
  */
+@SinceKotlin("2.1")
+@ExperimentalTime
 public val Instant.isDistantFuture: Boolean
     get() = this >= Instant.DISTANT_FUTURE
 
 // internal utilities
 
+@ExperimentalTime
 internal expect fun serializedInstant(instant: Instant): Any
 
 private const val DISTANT_PAST_SECONDS = -3217862419201
@@ -424,6 +431,7 @@ private const val MIN_SECOND = -31557014167219200L // -1000000000-01-01T00:00:00
  */
 private const val MAX_SECOND = 31556889864403199L // +1000000000-12-31T23:59:59
 
+@ExperimentalTime
 private class UnboundedLocalDateTime(
     val year: Int,
     val month: Int,
@@ -517,6 +525,7 @@ private class UnboundedLocalDateTime(
     }
 }
 
+@ExperimentalTime
 private fun parseIso(isoString: CharSequence): Instant {
     fun parseFailure(error: String): Nothing {
         throw InstantFormatException("$error when parsing an Instant from \"${isoString.truncateForErrorMessage(64)}\"")
@@ -643,6 +652,7 @@ private fun parseIso(isoString: CharSequence): Instant {
     return UnboundedLocalDateTime(year, month, day, hour, minute, second, nanosecond).toInstant(offsetSeconds)
 }
 
+@ExperimentalTime
 private fun formatIso(instant: Instant): String = buildString {
     val ldt = UnboundedLocalDateTime.fromInstant(instant)
     fun Appendable.appendTwoDigits(number: Int) {

@@ -12,11 +12,15 @@ package kotlin.time
 /**
  * Converts this [kotlin.time.Instant][Instant] value to a [java.time.Instant][java.time.Instant] value.
  */
+@SinceKotlin("2.1")
+@ExperimentalTime
 public fun Instant.toJavaInstant(): java.time.Instant =
     java.time.Instant.ofEpochSecond(epochSeconds, nanosecondsOfSecond.toLong())
 
 /**
  * Converts this [java.time.Instant][java.time.Instant] value to a [kotlin.time.Instant][Instant] value.
  */
+@SinceKotlin("2.1")
+@ExperimentalTime
 public fun java.time.Instant.toKotlinInstant(): Instant =
     Instant.fromEpochSeconds(epochSecond, nano)
