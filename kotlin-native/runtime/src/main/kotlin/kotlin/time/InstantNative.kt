@@ -5,21 +5,15 @@
 
 package kotlin.time
 
-import kotlinx.cinterop.*
-import platform.posix.*
+import kotlin.native.internal.GCUnsafeCall
 
-@OptIn(ExperimentalForeignApi::class)
-internal actual fun systemClockNow(): Instant = memScoped {
-    val tm = alloc<timespec>()
-    val error = clock_gettime(CLOCK_REALTIME.convert(), tm.ptr)
-    check(error == 0) { "Error when reading the system clock: ${strerror(errno)?.toKString() ?: "Unknown error"}" }
-    try {
-        require(tm.tv_nsec in 0 until NANOS_PER_SECOND)
-        Instant(tm.tv_sec.convert(), tm.tv_nsec.convert())
-    } catch (e: IllegalArgumentException) {
-        throw IllegalStateException("The readings from the system clock (${tm.tv_sec} seconds, ${tm.tv_nsec} nanoseconds) are not representable as an Instant")
-    }
+internal actual fun systemClockNow(): Instant = getSystemTimeNanos().let { time ->
+    // Instant.MAX and Instant.MIN are never going to be exceeded using just the Long number of nanoseconds
+    Instant(time.floorDiv(NANOS_PER_SECOND.toLong()), time.mod(NANOS_PER_SECOND.toLong()).toInt())
 }
+
+@GCUnsafeCall("Kotlin_system_getSystemTimeNanos")
+private external fun getSystemTimeNanos(): Long
 
 internal actual fun serializedInstant(instant: Instant): Any =
     throw UnsupportedOperationException("Serialization is supported only in Kotlin/JVM")
