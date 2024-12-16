@@ -7,7 +7,7 @@ package org.jetbrains.kotlin.config.phaser
 
 /**
  * Control which parts of compilation pipeline are enabled and how compiler should validate their invariants.
- * Phase configuration that does not know anything about actual compiler pipeline upfront.
+ * Phase configuration does not know anything about actual compiler pipeline upfront.
  *
  * @property verbose specify a set of phases that must print additional information during phase execution.
  * @property toDumpStateBefore specify a set of phases for which the state must be dumped right before phase execution.
