@@ -436,14 +436,18 @@ private class UnboundedLocalDateTime(
     fun toInstant(offsetSeconds: Int): Instant {
         val epochSeconds = run {
             // org.threeten.bp.LocalDate#toEpochDay
-            val epochDays = run {
+            val epochDays: Long = run {
                 val y = year.toLong()
                 var total = 365 * y
                 if (y >= 0) {
+                    // number of leap years since year 0 until (excluding) the given year
                     total += (y + 3) / 4 - (y + 99) / 100 + (y + 399) / 400
                 } else {
+                    // number of leap years since the given year until (excluding) year 0
                     total -= y / -4 - y / -100 + y / -400
                 }
+                // number of days since the beginning of a leap year until (excluding)
+                // the first day of the given month. Overestimates by 1 for month > 2
                 total += ((367 * month - 362) / 12)
                 total += day - 1
                 if (month > 2) {
@@ -457,7 +461,7 @@ private class UnboundedLocalDateTime(
             // org.threeten.bp.LocalTime#toSecondOfDay
             val daySeconds = hour * SECONDS_PER_HOUR + minute * SECONDS_PER_MINUTE + second
             // org.threeten.bp.chrono.ChronoLocalDateTime#toEpochSecond
-            epochDays * 86400L + daySeconds - offsetSeconds
+            epochDays * SECONDS_PER_DAY + daySeconds - offsetSeconds
         }
         if (epochSeconds < Instant.MIN.epochSeconds || epochSeconds > Instant.MAX.epochSeconds)
             throw InstantFormatException(
@@ -469,8 +473,8 @@ private class UnboundedLocalDateTime(
     override fun toString(): String = "UnboundedLocalDateTime($year-$month-$day $hour:$minute:$second.$nanosecond)"
 
     companion object {
-        fun fromInstant(instant: Instant, offsetSeconds: Int): UnboundedLocalDateTime {
-            val localSecond: Long = instant.epochSeconds + offsetSeconds
+        fun fromInstant(instant: Instant): UnboundedLocalDateTime {
+            val localSecond: Long = instant.epochSeconds
             val epochDays = localSecond.floorDiv(SECONDS_PER_DAY.toLong())
             val secsOfDay = localSecond.mod(SECONDS_PER_DAY.toLong()).toInt()
             val year: Int
@@ -515,12 +519,12 @@ private class UnboundedLocalDateTime(
 
 private fun parseIso(isoString: CharSequence): Instant {
     fun parseFailure(error: String): Nothing {
-        throw InstantFormatException("$error when parsing an Instant from $isoString")
+        throw InstantFormatException("$error when parsing an Instant from \"${isoString.truncateForErrorMessage(64)}\"")
     }
     fun expect(what: String, where: Int, predicate: (Char) -> Boolean) {
         val c = isoString[where]
         if (!predicate(c)) {
-            parseFailure("Expected $what, but got $c at position $where")
+            parseFailure("Expected $what, but got '$c' at position $where")
         }
     }
     val s = isoString
@@ -536,21 +540,22 @@ private fun parseIso(isoString: CharSequence): Instant {
         absYear = absYear * 10 + (s[i] - '0')
         ++i
     }
+    val yearStrLength = i - yearStart
     val year = when {
-        i > yearStart + 10 -> {
-            parseFailure("Expected at most 10 digits for the year number, got ${i - yearStart}")
+        yearStrLength > 10 -> {
+            parseFailure("Expected at most 10 digits for the year number, got $yearStrLength digits")
         }
-        i == yearStart + 10 && s[yearStart] >= '2' -> {
-            parseFailure("Expected at most 9 digits for the year number or year 1000000000, got ${i - yearStart}")
+        yearStrLength == 10 && s[yearStart] >= '2' -> {
+            parseFailure("Expected at most 9 digits for the year number or year 1000000000, got $yearStrLength digits")
         }
-        i - yearStart < 4 -> {
-            parseFailure("The year number must be padded to 4 digits, got ${i - yearStart} digits")
+        yearStrLength < 4 -> {
+            parseFailure("The year number must be padded to 4 digits, got $yearStrLength digits")
         }
         else -> {
-            if (yearSign == '+' && i - yearStart == 4) {
+            if (yearSign == '+' && yearStrLength == 4) {
                 parseFailure("The '+' sign at the start is only valid for year numbers longer than 4 digits")
             }
-            if (yearSign == ' ' && i - yearStart != 4) {
+            if (yearSign == ' ' && yearStrLength != 4) {
                 parseFailure("A '+' or '-' sign is required for year numbers longer than 4 digits")
             }
             if (yearSign == '-') -absYear else absYear
@@ -583,10 +588,11 @@ private fun parseIso(isoString: CharSequence): Instant {
             fraction = fraction * 10 + (s[i] - '0')
             ++i
         }
-        if (i - fractionStart in 1..9) {
-            fraction * POWERS_OF_TEN[fractionStart + 9 - i]
+        val fractionStrLength = i - fractionStart
+        if (fractionStrLength in 1..9) {
+            fraction * POWERS_OF_TEN[9 - fractionStrLength]
         } else {
-            parseFailure("1..9 digits are supported for the fraction of the second, got {i - fractionStart}")
+            parseFailure("1..9 digits are supported for the fraction of the second, got $fractionStrLength digits")
         }
     } else {
         i += 15
@@ -603,15 +609,15 @@ private fun parseIso(isoString: CharSequence): Instant {
         }
         '-', '+' -> {
             val offsetStrLength = s.length - i
-            if (offsetStrLength % 3 != 0) { parseFailure("Invalid UTC offset string '${s.substring(i)}'") }
-            if (offsetStrLength > 9) { parseFailure("The UTC offset string '${s.substring(i)}' is too long") }
+            if (offsetStrLength > 9) { parseFailure("The UTC offset string \"${s.substring(i).truncateForErrorMessage(16)}\" is too long") }
+            if (offsetStrLength % 3 != 0) { parseFailure("Invalid UTC offset string \"${s.substring(i)}\"") }
             for (j in listOf(3, 6)) {
                 if ((s.getOrNull(i + j) ?: break) != ':')
                     parseFailure("Expected ':' at index ${i + j}, got '${s[i + j]}'")
             }
             for (j in listOf(1, 2, 4, 5, 7, 8)) {
                 if ((s.getOrNull(i + j) ?: break) !in '0'..'9')
-                    parseFailure("Expected a digit at index ${i + j}, got '${s[i + j]}'")
+                    parseFailure("Expected an ASCII digit at index ${i + j}, got '${s[i + j]}'")
             }
             val offsetHour = twoDigitNumber(i + 1)
             val offsetMinute = if (offsetStrLength > 3) { twoDigitNumber(i + 4) } else { 0 }
@@ -619,7 +625,7 @@ private fun parseIso(isoString: CharSequence): Instant {
             if (offsetMinute > 59) { parseFailure("Expected offset-minute-of-hour in 0..59, got $offsetMinute") }
             if (offsetSecond > 59) { parseFailure("Expected offset-second-of-minute in 0..59, got $offsetSecond") }
             if (offsetHour > 17 && !(offsetHour == 18 && offsetMinute == 0 && offsetSecond == 0)) {
-                parseFailure("Expected an offset in -18:00..+18:00, got $sign$offsetHour:$offsetMinute:$offsetSecond")
+                parseFailure("Expected an offset in -18:00..+18:00, got ${s.substring(i)}")
             }
             (offsetHour * 3600 + offsetMinute * 60 + offsetSecond) * if (sign == '-') -1 else 1
         }
@@ -629,7 +635,7 @@ private fun parseIso(isoString: CharSequence): Instant {
     }
     if (month !in 1..12) { parseFailure("Expected a month number in 1..12, got $month") }
     if (day !in 1..month.monthLength(isLeapYear(year))) {
-        parseFailure("Expected a valid day-of-month for $year-$month, got $day")
+        parseFailure("Expected a valid day-of-month for month $month of year $year, got $day")
     }
     if (hour > 23) { parseFailure("Expected hour in 0..23, got $hour") }
     if (minute > 59) { parseFailure("Expected minute-of-hour in 0..59, got $minute") }
@@ -638,7 +644,7 @@ private fun parseIso(isoString: CharSequence): Instant {
 }
 
 private fun formatIso(instant: Instant): String = buildString {
-    val ldt = UnboundedLocalDateTime.fromInstant(instant, 0)
+    val ldt = UnboundedLocalDateTime.fromInstant(instant)
     fun Appendable.appendTwoDigits(number: Int) {
         if (number < 10) append('0')
         append(number)
@@ -775,5 +781,9 @@ private val POWERS_OF_TEN = intArrayOf(
     100000000,
     1000000000
 )
+
+private fun CharSequence.truncateForErrorMessage(maxLength: Int): String {
+    return if (length <= maxLength) this.toString() else substring(0, maxLength) + "..."
+}
 
 private class InstantFormatException(message: String) : IllegalArgumentException(message)
