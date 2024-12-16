@@ -19,16 +19,7 @@ import org.jetbrains.kotlin.gradle.targets.js.HasPlatformDisambiguate
 import org.jetbrains.kotlin.gradle.targets.js.MultiplePluginDeclarationDetector
 import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootPlugin
 import org.jetbrains.kotlin.gradle.targets.js.nodejs.TasksRequirements
-import org.jetbrains.kotlin.gradle.targets.js.npm.AbstractNpmExtension
-import org.jetbrains.kotlin.gradle.targets.js.npm.GradleNodeModulesCache
-import org.jetbrains.kotlin.gradle.targets.js.npm.KotlinNpmResolutionManager
-import org.jetbrains.kotlin.gradle.targets.js.npm.LockCopyTask
-import org.jetbrains.kotlin.gradle.targets.js.npm.LockFileMismatchReport
-import org.jetbrains.kotlin.gradle.targets.js.npm.LockStoreTask
-import org.jetbrains.kotlin.gradle.targets.js.npm.NodeJsEnvironmentTask
-import org.jetbrains.kotlin.gradle.targets.js.npm.NpmProject
-import org.jetbrains.kotlin.gradle.targets.js.npm.RequiresNpmDependencies
-import org.jetbrains.kotlin.gradle.targets.js.npm.asNodeJsEnvironment
+import org.jetbrains.kotlin.gradle.targets.js.npm.*
 import org.jetbrains.kotlin.gradle.targets.js.npm.resolver.KotlinRootNpmResolver
 import org.jetbrains.kotlin.gradle.targets.js.npm.resolver.PACKAGE_JSON_UMBRELLA_TASK_NAME
 import org.jetbrains.kotlin.gradle.targets.js.npm.resolver.implementing
@@ -134,7 +125,10 @@ internal class NodeJsRootPluginApplier(
             .packageJsonUmbrellaTaskProvider
 
         val rootPackageJson =
-            project.tasks.register(platformDisambiguate.extensionName(RootPackageJsonTask.Companion.NAME), RootPackageJsonTask::class.java) { task ->
+            project.tasks.register(
+                platformDisambiguate.extensionName(RootPackageJsonTask.Companion.NAME),
+                RootPackageJsonTask::class.java
+            ) { task ->
                 task.group = NodeJsRootPlugin.Companion.TASKS_GROUP_NAME
                 task.description = "Create root package.json"
 
@@ -233,7 +227,10 @@ internal class NodeJsRootPluginApplier(
             ).disallowChanges()
         }
 
-        project.tasks.register(platformDisambiguate.extensionName(LockCopyTask.Companion.UPGRADE_PACKAGE_LOCK), LockStoreTask::class.java) { task ->
+        project.tasks.register(
+            platformDisambiguate.extensionName(LockCopyTask.Companion.UPGRADE_PACKAGE_LOCK),
+            LockStoreTask::class.java
+        ) { task ->
             task.dependsOn(npmInstall)
             task.inputFile.set(nodeJsRoot.rootPackageDirectory.map { it.file(LockCopyTask.Companion.PACKAGE_LOCK) })
             task.outputDirectory.set(npm.lockFileDirectory)
@@ -290,7 +287,10 @@ internal class NodeJsRootPluginApplier(
             listOf(npm.storePackageLockTaskProvider)
         ).disallowChanges()
 
-        project.tasks.register(platformDisambiguate.extensionName("node" + CleanDataTask.Companion.NAME_SUFFIX), CleanDataTask::class.java) {
+        project.tasks.register(
+            platformDisambiguate.extensionName("node" + CleanDataTask.Companion.NAME_SUFFIX),
+            CleanDataTask::class.java
+        ) {
             it.cleanableStoreProvider = nodeJs.env.map { it.cleanableStore }
             it.group = NodeJsRootPlugin.Companion.TASKS_GROUP_NAME
             it.description = "Clean unused local node version"
@@ -315,14 +315,14 @@ internal class NodeJsRootPluginApplier(
             .disallowChanges()
 
         packageJsonFiles.value(
-            project.provider {
+            nodeJsRoot.projectPackagesDirectory.map { projectPackagesDirectory ->
                 nodeJsRoot.resolver
                     .projectResolvers.values
                     .flatMap { it.compilationResolvers }
                     .map { it.compilationNpmResolution }
                     .map { resolution ->
                         val name = resolution.npmProjectName
-                        nodeJsRoot.projectPackagesDirectory.map { it.dir(name).file(NpmProject.Companion.PACKAGE_JSON) }.get()
+                        projectPackagesDirectory.dir(name).file(NpmProject.Companion.PACKAGE_JSON)
                     }
             }
         ).disallowChanges()
