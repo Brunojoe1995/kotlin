@@ -145,9 +145,7 @@ open class PropertyAccessorInlineLowering(
             if (!isSimpleSetter(callee, backingField)) return null
 
             return call.run {
-                val value = arguments.zip(symbol.owner.parameters)
-                    .firstOrNull { (_, parameter) -> parameter.kind == IrParameterKind.Regular }?.first
-                    ?: error("Setter should have a value argument")
+                val value = arguments.last() ?: error("Setter should have a value argument")
                 IrSetFieldImpl(startOffset, endOffset, backingField.symbol, call.dispatchReceiver, value, unitType, origin)
             }
         }
