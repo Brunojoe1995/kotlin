@@ -45,18 +45,14 @@ class IncrementalCacheGuard(cacheDir: String, private val readonly: Boolean) {
 
 inline fun <R> IncrementalCacheGuard.acquireAndRelease(block: (AcquireStatus) -> R): R {
     val status = acquire()
-    return try {
-        block(status)
-    } finally {
+    return block(status).also {
         release()
     }
 }
 
 inline fun <R> IncrementalCacheGuard.tryAcquireAndRelease(block: () -> R): R {
     tryAcquire()
-    return try {
-        block()
-    } finally {
+    return block().also {
         release()
     }
 }

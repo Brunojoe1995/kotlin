@@ -56,6 +56,7 @@ object CommonWebConfigurationUpdater : ConfigurationUpdater<K2JSCompilerArgument
         val (arguments, services, rootDisposable, _, _) = input
         setupPlatformSpecificArgumentsAndServices(configuration, arguments, services)
         initializeCommonConfiguration(configuration, arguments)
+        configuration.jsIncrementalCompilationEnabled = incrementalCompilationIsEnabledForJs(arguments)
 
         val messageCollector = configuration.messageCollector
         when (val outputName = arguments.moduleName) {
@@ -382,5 +383,6 @@ object WasmConfigurationUpdater : ConfigurationUpdater<K2JSCompilerArguments>() 
         configuration.put(WasmConfigurationKeys.WASM_USE_JS_TAG, arguments.wasmUseJsTag ?: arguments.wasmUseNewExceptionProposal)
         configuration.putIfNotNull(WasmConfigurationKeys.WASM_TARGET, arguments.wasmTarget?.let(WasmTarget::fromName))
         configuration.putIfNotNull(WasmConfigurationKeys.DCE_DUMP_DECLARATION_IR_SIZES_TO_FILE, arguments.irDceDumpDeclarationIrSizesToFile)
+        configuration.propertyLazyInitialization = arguments.irPropertyLazyInitialization
     }
 }

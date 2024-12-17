@@ -26,6 +26,7 @@ import org.jetbrains.kotlin.ir.backend.js.checkers.JsStandardLibrarySpecialCompa
 import org.jetbrains.kotlin.ir.backend.js.checkers.WasmStandardLibrarySpecialCompatibilityChecker
 import org.jetbrains.kotlin.js.config.friendLibraries
 import org.jetbrains.kotlin.js.config.incrementalDataProvider
+import org.jetbrains.kotlin.js.config.jsIncrementalCompilationEnabled
 import org.jetbrains.kotlin.js.config.libraries
 import org.jetbrains.kotlin.js.config.wasmCompilation
 import org.jetbrains.kotlin.library.KotlinLibrary
@@ -59,7 +60,8 @@ object JsFrontendPipelinePhase : PipelinePhase<ConfigurationPipelineArtifact, Js
 
             if (
                 groupedSources.isEmpty() &&
-                !configuration.allowNoSourceFiles
+                !configuration.allowNoSourceFiles &&
+                !configuration.jsIncrementalCompilationEnabled
             ) {
                 if (!configuration.printVersion) {
                     messageCollector.report(CompilerMessageSeverity.ERROR, "No source files")
@@ -85,7 +87,11 @@ object JsFrontendPipelinePhase : PipelinePhase<ConfigurationPipelineArtifact, Js
             }
         } else {
             val sourceFiles = environmentForJS.getSourceFiles()
-            if (sourceFiles.isEmpty() && !configuration.allowNoSourceFiles) {
+            if (
+                sourceFiles.isEmpty() &&
+                !configuration.allowNoSourceFiles &&
+                !configuration.jsIncrementalCompilationEnabled
+            ) {
                 if (!configuration.printVersion) {
                     messageCollector.report(CompilerMessageSeverity.ERROR, "No source files")
                 }
