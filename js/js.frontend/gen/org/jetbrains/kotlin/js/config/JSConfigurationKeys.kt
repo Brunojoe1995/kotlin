@@ -73,6 +73,9 @@ object JSConfigurationKeys {
     val MODULE_KIND = CompilerConfigurationKey.create<ModuleKind>("module kind")
 
     @JvmField
+    val JS_INCREMENTAL_COMPILATION_ENABLED = CompilerConfigurationKey.create<Boolean>("incremental compilation enabled")
+
+    @JvmField
     val INCREMENTAL_DATA_PROVIDER = CompilerConfigurationKey.create<IncrementalDataProvider>("incremental data provider")
 
     @JvmField
@@ -257,6 +260,10 @@ var CompilerConfiguration.target: EcmaVersion?
 var CompilerConfiguration.moduleKind: ModuleKind?
     get() = get(JSConfigurationKeys.MODULE_KIND)
     set(value) { put(JSConfigurationKeys.MODULE_KIND, requireNotNull(value) { "nullable values are not allowed" }) }
+
+var CompilerConfiguration.jsIncrementalCompilationEnabled: Boolean
+    get() = getBoolean(JSConfigurationKeys.JS_INCREMENTAL_COMPILATION_ENABLED)
+    set(value) { put(JSConfigurationKeys.JS_INCREMENTAL_COMPILATION_ENABLED, value) }
 
 var CompilerConfiguration.incrementalDataProvider: IncrementalDataProvider?
     get() = get(JSConfigurationKeys.INCREMENTAL_DATA_PROVIDER)

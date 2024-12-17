@@ -52,6 +52,8 @@ object JsConfigurationKeysContainer : KeysContainer("org.jetbrains.kotlin.js.con
 
     val MODULE_KIND by key<ModuleKind>("module kind")
 
+    val JS_INCREMENTAL_COMPILATION_ENABLED by key<Boolean>("incremental compilation enabled")
+
     val INCREMENTAL_DATA_PROVIDER by key<IncrementalDataProvider>("incremental data provider", throwOnNull = false)
 
     val INCREMENTAL_RESULTS_CONSUMER by key<IncrementalResultsConsumer>("incremental results consumer", throwOnNull = false)
