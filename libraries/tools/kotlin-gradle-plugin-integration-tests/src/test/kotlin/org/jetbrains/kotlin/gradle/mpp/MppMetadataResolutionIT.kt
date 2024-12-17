@@ -4,7 +4,7 @@
  */
 package org.jetbrains.kotlin.gradle.mpp
 
-import org.gradle.api.logging.configuration.WarningMode
+import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.util.GradleVersion
 import org.jetbrains.kotlin.gradle.plugin.mpp.KmpIsolatedProjectsSupport
@@ -148,11 +148,6 @@ class MppMetadataResolutionIT : KGPBaseTest() {
             kmpIsolatedProjectsSupport = KmpIsolatedProjectsSupport.valueOf(kmpIsolatedProjectsSupport)
         )
 
-        // See: KT-72394 (Dependency.getProjectDependency is deprecated)
-        if (gradleVersion >= GradleVersion.version(TestVersions.Gradle.G_8_11) && kmpIsolatedProjectsSupport == "DISABLE") {
-            buildOptions = buildOptions.copy(warningMode = WarningMode.Summary)
-        }
-
         fun GradleProject.configureKotlinMultiplatform() {
             buildScriptInjection {
                 project.group = "default.group"
@@ -166,7 +161,8 @@ class MppMetadataResolutionIT : KGPBaseTest() {
             includeOtherProjectAsSubmodule("base-kotlin-multiplatform-library", newSubmoduleName = "lib1") {
                 configureKotlinMultiplatform()
                 buildScriptInjection {
-                    applyMavenPublishPlugin()
+                    project.plugins.apply("maven-publish")
+                    val publishing = project.extensions.getByName("publishing") as PublishingExtension
                     publishing.publications.withType(MavenPublication::class.java).configureEach {
                         if (it.name == "kotlinMultiplatform") {
                             it.groupId = "custom.group"
