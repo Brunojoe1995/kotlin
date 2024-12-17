@@ -27,7 +27,7 @@ abstract class Fir2IrReplSnippetConfiguratorExtension(
 
     fun interface Factory : FirExtension.Factory<Fir2IrReplSnippetConfiguratorExtension>
 
-    abstract fun Fir2IrComponents.prepareSnippet(firReplSnippet: FirReplSnippet, irSnippet: IrReplSnippet)
+    abstract fun Fir2IrComponents.prepareSnippet(fir2IrVisitor: Fir2IrVisitor, firReplSnippet: FirReplSnippet, irSnippet: IrReplSnippet)
 }
 
 val FirExtensionService.fir2IrReplSnippetConfigurators:

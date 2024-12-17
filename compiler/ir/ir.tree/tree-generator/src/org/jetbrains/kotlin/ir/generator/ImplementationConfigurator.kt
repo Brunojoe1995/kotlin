@@ -139,7 +139,7 @@ object ImplementationConfigurator : AbstractIrTreeImplementationConfigurator() {
         impl(replSnippet) {
             implementation.putImplementationOptInInConstructor = false
             implementation.constructorParameterOrderOverride = listOf("symbol", "name", "factory", "startOffset", "endOffset")
-            defaultNull("returnType", "targetClass")
+            defaultNull("returnType", "stateObject", "targetClass")
             isLateinit("receiversParameters", "body")
             default("origin", "REPL_SNIPPET_ORIGIN")
             default("capturingDeclarationsFromOtherSnippets", "ArrayList()")

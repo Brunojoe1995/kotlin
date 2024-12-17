@@ -34,6 +34,8 @@ abstract class IrReplSnippet : IrDeclarationBase(), IrDeclarationWithName, IrDec
 
     abstract val capturingDeclarationsFromOtherSnippets: MutableList<IrDeclaration>
 
+    abstract var stateObject: IrClassSymbol?
+
     abstract var body: IrBody
 
     abstract var returnType: IrType?

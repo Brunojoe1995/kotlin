@@ -360,7 +360,7 @@ class Fir2IrVisitor(
 
         for (configurator in session.extensionService.fir2IrReplSnippetConfigurators) {
             with(configurator) {
-                prepareSnippet(replSnippet, irSnippet)
+                prepareSnippet(this@Fir2IrVisitor, replSnippet, irSnippet)
             }
         }
 

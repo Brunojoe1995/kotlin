@@ -553,6 +553,7 @@ object IrTree : AbstractTreeBuilder() {
         +listField("receiversParameters", valueParameter, mutability = Var)
         +listField("variablesFromOtherSnippets", variable, mutability = MutableList)
         +listField("capturingDeclarationsFromOtherSnippets", declaration, mutability = MutableList, isChild = false)
+        +referencedSymbol("stateObject", classSymbol, nullable = true)
         +field("body", body)
         +field("returnType", irTypeType, nullable = true)
         +referencedSymbol("targetClass", classSymbol, nullable = true)

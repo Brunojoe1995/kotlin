@@ -16,6 +16,7 @@ import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.scripting.test.repl.FirReplHistoryProviderImpl
 import org.jetbrains.kotlin.scripting.test.repl.TestReplCompilerPluginRegistrar
 import org.jetbrains.kotlin.scripting.test.repl.firReplHistoryProvider
+import org.jetbrains.kotlin.scripting.test.repl.replStateObjectFqName
 import org.jetbrains.kotlin.test.FirParser
 import org.jetbrains.kotlin.test.backend.handlers.JvmBinaryArtifactHandler
 import org.jetbrains.kotlin.test.backend.handlers.computeTestRuntimeClasspath
@@ -84,6 +85,7 @@ private class ReplConfigurator(testServices: TestServices) : EnvironmentConfigur
     override fun configureCompilerConfiguration(configuration: CompilerConfiguration, module: TestModule) {
         val hostConfiguration = ScriptingHostConfiguration(defaultJvmScriptingHostConfiguration) {
             firReplHistoryProvider(FirReplHistoryProviderImpl())
+            replStateObjectFqName("${module.name}.ReplState")
             // TODO: add jdk path and other params if needed
         }
         configuration.add(CompilerPluginRegistrar.COMPILER_PLUGIN_REGISTRARS, TestReplCompilerPluginRegistrar(hostConfiguration))

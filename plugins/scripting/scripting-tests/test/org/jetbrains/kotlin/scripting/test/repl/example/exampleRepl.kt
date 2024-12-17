@@ -29,6 +29,7 @@ import org.jetbrains.kotlin.scripting.compiler.plugin.repl.configuration.ReplCon
 import org.jetbrains.kotlin.scripting.test.repl.FirReplHistoryProviderImpl
 import org.jetbrains.kotlin.scripting.test.repl.TestReplCompilerPluginRegistrar
 import org.jetbrains.kotlin.scripting.test.repl.firReplHistoryProvider
+import org.jetbrains.kotlin.scripting.test.repl.replStateObjectFqName
 import kotlin.reflect.KClass
 import kotlin.script.experimental.api.ResultWithDiagnostics
 import kotlin.script.experimental.api.ScriptCompilationConfiguration
@@ -41,7 +42,6 @@ import kotlin.script.experimental.impl.internalScriptingRunSuspend
 import kotlin.script.experimental.jvm.baseClassLoader
 import kotlin.script.experimental.jvm.defaultJvmScriptingHostConfiguration
 import kotlin.script.experimental.jvm.dependenciesFromClassloader
-import kotlin.script.experimental.jvm.dependenciesFromCurrentContext
 import kotlin.script.experimental.jvm.impl.KJvmCompiledScript
 import kotlin.script.experimental.jvm.jvm
 import kotlin.script.experimental.jvm.util.isIncomplete
@@ -62,6 +62,8 @@ fun main() {
     }
 }
 
+object ReplState: HashMap<String, Any?>()
+
 @OptIn(ExperimentalCompilerApi::class)
 private class ExampleRepl(val replConfiguration: ReplConfiguration, rootDisposable: Disposable) {
 
@@ -74,6 +76,7 @@ private class ExampleRepl(val replConfiguration: ReplConfiguration, rootDisposab
     }
     val hostConfiguration = ScriptingHostConfiguration(defaultJvmScriptingHostConfiguration) {
         firReplHistoryProvider(FirReplHistoryProviderImpl())
+        replStateObjectFqName(ReplState::class.qualifiedName!!)
     }
     private val compilerContext = createIsolatedCompilationContext(
         scriptCompilationConfiguration,

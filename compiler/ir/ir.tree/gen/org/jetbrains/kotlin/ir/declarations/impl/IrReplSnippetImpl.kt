@@ -43,6 +43,8 @@ class IrReplSnippetImpl(
 
     override val capturingDeclarationsFromOtherSnippets: MutableList<IrDeclaration> = ArrayList()
 
+    override var stateObject: IrClassSymbol? = null
+
     override lateinit var body: IrBody
 
     override var returnType: IrType? = null

@@ -123,7 +123,7 @@ internal class ReplSnippetsToClassesLowering(val context: IrPluginContext) : Mod
         }
 
         val snippetAccessCallsGenerator = ReplSnippetAccessCallsGenerator(
-            context, irSnippetClassThisReceiver, implicitReceiversFieldsWithParameters, irSnippetClass, stateField
+            context, irSnippetClassThisReceiver, implicitReceiversFieldsWithParameters, irSnippetClass, stateField, irSnippet.stateObject!!
         )
 
         irSnippetClass.declarations.add(createConstructor(irSnippetClass, stateField))
@@ -233,8 +233,6 @@ internal class ReplSnippetsToClassesLowering(val context: IrPluginContext) : Mod
                 .transform(lambdaPatcher, ScriptFixLambdasTransformerContext())
         }
 
-
-
         irSnippetClass.annotations += (irSnippetClass.parent as IrFile).annotations
     }
 
@@ -285,6 +283,7 @@ private class ReplSnippetAccessCallsGenerator(
     implicitReceiversFieldsWithParameters: ArrayList<Pair<IrField, IrValueParameter>>,
     val irSnippetClass: IrClass,
     val stateField: IrField,
+    val irReplStateObjectSymbol: IrClassSymbol
 ) : ScriptLikeAccessCallsGenerator(context, snippetClassReceiver, implicitReceiversFieldsWithParameters) {
     private val mapClass = stateField.type.getClass()!!
     private val mapGet = mapClass.functions.single { it.name.asString() == "get" }
@@ -316,14 +315,11 @@ private class ReplSnippetAccessCallsGenerator(
     fun createPutSelfToState(data: ScriptLikeToClassTransformerContext): IrCall =
         IrCallImpl(UNDEFINED_OFFSET, UNDEFINED_OFFSET, mapPut.returnType, mapPut.symbol).apply {
             dispatchReceiver =
-                IrGetFieldImpl(
+                IrGetObjectValueImpl(
                     startOffset, endOffset,
-                    stateField.symbol,
-                    irSnippetClass.typeWith(),
-                    IrStatementOrigin.GET_PROPERTY
-                ).also {
-                    it.receiver = getAccessCallForSelf(data, startOffset, endOffset, null, null)
-                }
+                    irReplStateObjectSymbol.typeWith(),
+                    irReplStateObjectSymbol,
+                )
             putValueArgument(
                 0,
                 IrConstImpl.string(
@@ -347,14 +343,11 @@ private class ReplSnippetAccessCallsGenerator(
         else {
             val getSnippetCall = IrCallImpl(startOffset, endOffset, mapGet.returnType, mapGet.symbol).apply {
                 dispatchReceiver =
-                    IrGetFieldImpl(
+                    IrGetObjectValueImpl(
                         startOffset, endOffset,
-                        stateField.symbol,
-                        irSnippetClassFromState.typeWith(),
-                        IrStatementOrigin.GET_PROPERTY
-                    ).also {
-                        it.receiver = getAccessCallForSelf(data, startOffset, endOffset, null, null)
-                    }
+                        irReplStateObjectSymbol.typeWith(),
+                        irReplStateObjectSymbol,
+                    )
                 putValueArgument(
                     0,
                     IrConstImpl.string(
