@@ -52,7 +52,7 @@ class Ir2JsTransformer private constructor(
         module,
         messageCollector,
         mainCallArguments,
-        keep = arguments.irKeep?.split(",")?.toSet() ?: emptySet(),
+        keep = arguments.irKeep?.split(",")?.filterNot { it.isEmpty() }?.toSet() ?: emptySet(),
         dceRuntimeDiagnostic = arguments.irDceRuntimeDiagnostic,
         safeExternalBoolean = arguments.irSafeExternalBoolean,
         safeExternalBooleanDiagnostic = arguments.irSafeExternalBooleanDiagnostic,
