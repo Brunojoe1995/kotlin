@@ -57,7 +57,7 @@ val K2JSCompilerArguments.dtsStrategy: TsCompilationStrategy
         else -> TsCompilationStrategy.MERGED
     }
 
-class DisposableZipFileSystemAccessor private constructor(
+internal class DisposableZipFileSystemAccessor private constructor(
     private val zipAccessor: ZipFileSystemCacheableAccessor,
 ) : Disposable, ZipFileSystemAccessor by zipAccessor {
     constructor(cacheLimit: Int) : this(ZipFileSystemCacheableAccessor(cacheLimit))
