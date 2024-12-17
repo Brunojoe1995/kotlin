@@ -19,6 +19,7 @@ import org.jetbrains.kotlin.ir.declarations.IrValueParameter
 import org.jetbrains.kotlin.ir.expressions.IrBlock
 import org.jetbrains.kotlin.ir.expressions.IrCatch
 import org.jetbrains.kotlin.ir.symbols.IrValueSymbol
+import org.jetbrains.kotlin.ir.util.nonDispatchParameters
 import org.jetbrains.kotlin.ir.util.primaryConstructor
 import org.jetbrains.kotlin.ir.visitors.IrElementVisitorVoid
 import org.jetbrains.kotlin.ir.visitors.acceptVoid
@@ -97,9 +98,7 @@ internal object ValueScopeUpdater : ContextUpdater {
         }
 
         private fun MutableSet<IrValueSymbol>.addValueParametersOfPrimaryConstructor(declaration: IrDeclaration) {
-            (declaration.parent as? IrClass)?.primaryConstructor?.parameters
-                ?.filter { it.kind == IrParameterKind.Regular || it.kind == IrParameterKind.Context }
-                ?.mapTo(this, IrValueParameter::symbol)
+            (declaration.parent as? IrClass)?.primaryConstructor?.nonDispatchParameters?.mapTo(this, IrValueParameter::symbol)
         }
     }
 }
