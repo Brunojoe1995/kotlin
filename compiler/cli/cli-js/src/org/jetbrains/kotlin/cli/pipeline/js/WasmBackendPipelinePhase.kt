@@ -16,6 +16,7 @@ import org.jetbrains.kotlin.backend.wasm.ir2wasm.WasmModuleMetadataCache
 import org.jetbrains.kotlin.backend.wasm.writeCompilationResult
 import org.jetbrains.kotlin.cli.common.perfManager
 import org.jetbrains.kotlin.cli.js.IcCachesArtifacts
+import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.moduleName
 import org.jetbrains.kotlin.ir.backend.js.ModulesStructure
@@ -34,25 +35,28 @@ import org.jetbrains.kotlin.wasm.config.WasmConfigurationKeys
 import java.io.File
 
 object WasmBackendPipelinePhase : WebBackendPipelinePhase<WasmBackendPipelineArtifact>("WasmBackendPipelinePhase") {
-    override fun compileWithIC(
+    override val configFiles: EnvironmentConfigFiles
+        get() = EnvironmentConfigFiles.WASM_CONFIG_FILES
+
+    override fun compileIncrementally(
         icCaches: IcCachesArtifacts,
         configuration: CompilerConfiguration,
     ): WasmBackendPipelineArtifact? {
         val outputDir = configuration.outputDir!!
-        val result = compileWithIC(
-            icCaches,
-            configuration,
-            configuration.moduleName!!,
-            outputDir,
-            configuration.outputName!!,
-            configuration.preserveIcOrder,
-            configuration.getBoolean(WasmConfigurationKeys.WASM_DEBUG),
-            configuration.getBoolean(WasmConfigurationKeys.WASM_GENERATE_WAT),
+        val result = compileIncrementally(
+            icCaches = icCaches,
+            configuration = configuration,
+            moduleName = configuration.moduleName!!,
+            outputDir = outputDir,
+            outputName = configuration.outputName!!,
+            preserveIcOrder = configuration.preserveIcOrder,
+            wasmDebug = configuration.getBoolean(WasmConfigurationKeys.WASM_DEBUG),
+            wasmGenerateWat = configuration.getBoolean(WasmConfigurationKeys.WASM_GENERATE_WAT),
         )
         return WasmBackendPipelineArtifact(result, outputDir, configuration)
     }
 
-    fun compileWithIC(
+    internal fun compileIncrementally(
         icCaches: IcCachesArtifacts,
         configuration: CompilerConfiguration,
         moduleName: String,
@@ -90,13 +94,13 @@ object WasmBackendPipelinePhase : WebBackendPipelinePhase<WasmBackendPipelineArt
         return res
     }
 
-    override fun compileWithoutIC(
+    override fun compileNonIncrementally(
         configuration: CompilerConfiguration,
         module: ModulesStructure,
         mainCallArguments: List<String>?,
     ): WasmBackendPipelineArtifact? {
         val outputDir = configuration.outputDir!!
-        val result = compileWithoutIC(
+        val result = compileNonIncrementally(
             configuration,
             module,
             configuration.outputName!!,
@@ -109,7 +113,7 @@ object WasmBackendPipelinePhase : WebBackendPipelinePhase<WasmBackendPipelineArt
         return WasmBackendPipelineArtifact(result, outputDir, configuration)
     }
 
-    fun compileWithoutIC(
+    internal fun compileNonIncrementally(
         configuration: CompilerConfiguration,
         module: ModulesStructure,
         outputName: String,

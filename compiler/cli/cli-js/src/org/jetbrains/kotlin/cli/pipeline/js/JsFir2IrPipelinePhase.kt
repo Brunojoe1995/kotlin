@@ -5,7 +5,6 @@
 
 package org.jetbrains.kotlin.cli.pipeline.js
 
-import org.jetbrains.kotlin.cli.common.perfManager
 import org.jetbrains.kotlin.cli.js.klib.transformFirToIr
 import org.jetbrains.kotlin.cli.pipeline.CheckCompilationErrors
 import org.jetbrains.kotlin.cli.pipeline.PerformanceNotifications
@@ -18,10 +17,7 @@ object JsFir2IrPipelinePhase : PipelinePhase<JsFrontendPipelineArtifact, JsFir2I
 ) {
     override fun executePhase(input: JsFrontendPipelineArtifact): JsFir2IrPipelineArtifact? {
         val (analyzedOutput, configuration, diagnosticsReporter, moduleStructure) = input
-        val performanceManager = configuration.perfManager
-        performanceManager?.notifyIRTranslationStarted()
         val fir2IrActualizedResult = transformFirToIr(moduleStructure, analyzedOutput.output, diagnosticsReporter)
-        performanceManager?.notifyIRTranslationFinished()
         return JsFir2IrPipelineArtifact(
             fir2IrActualizedResult,
             analyzedOutput,

@@ -89,6 +89,7 @@ object JsKlibSerializationPipelinePhase : PipelinePhase<JsFir2IrPipelineArtifact
             )
         }
         if (shouldGoToNextIcRound) {
+            // TODO (KT-73991): investigate the need in this hack
             throw IncrementalNextRoundException()
         }
     }

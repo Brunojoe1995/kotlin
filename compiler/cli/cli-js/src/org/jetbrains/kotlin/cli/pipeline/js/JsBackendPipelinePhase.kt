@@ -13,6 +13,7 @@ import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity.ERROR
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity.INFO
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.cli.js.*
+import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.messageCollector
 import org.jetbrains.kotlin.config.moduleName
@@ -24,11 +25,14 @@ import org.jetbrains.kotlin.serialization.js.ModuleKind
 import java.io.File
 
 object JsBackendPipelinePhase : WebBackendPipelinePhase<JsBackendPipelineArtifact>("JsBackendPipelinePhase") {
-    override fun compileWithIC(
+    override val configFiles: EnvironmentConfigFiles
+        get() = EnvironmentConfigFiles.JS_CONFIG_FILES
+
+    override fun compileIncrementally(
         icCaches: IcCachesArtifacts,
         configuration: CompilerConfiguration,
     ): JsBackendPipelineArtifact? {
-        val outputs = compileWithIC(
+        val outputs = compileIncrementally(
             icCaches,
             configuration,
             configuration.moduleKind!!,
@@ -42,9 +46,9 @@ object JsBackendPipelinePhase : WebBackendPipelinePhase<JsBackendPipelineArtifac
     }
 
     /**
-     * This method is shared between K2 phased pipeline and `K2JsCompilerImpl.compileWithIC` for K1 CLI
+     * This method is shared between K2 phased pipeline and [K2JsCompilerImpl.compileWithIC] for K1 CLI
      */
-    fun compileWithIC(
+    internal fun compileIncrementally(
         icCaches: IcCachesArtifacts,
         configuration: CompilerConfiguration,
         moduleKind: ModuleKind,
@@ -79,14 +83,14 @@ object JsBackendPipelinePhase : WebBackendPipelinePhase<JsBackendPipelineArtifac
         return outputs
     }
 
-    override fun compileWithoutIC(
+    override fun compileNonIncrementally(
         configuration: CompilerConfiguration,
         module: ModulesStructure,
         mainCallArguments: List<String>?,
     ): JsBackendPipelineArtifact? {
         val messageCollector = configuration.messageCollector
         val ir2JsTransformer = Ir2JsTransformer(configuration, module, messageCollector, mainCallArguments)
-        val outputs = compileWithoutIC(
+        val outputs = compileNonIncrementally(
             messageCollector,
             ir2JsTransformer,
             configuration.moduleKind!!,
@@ -99,9 +103,9 @@ object JsBackendPipelinePhase : WebBackendPipelinePhase<JsBackendPipelineArtifac
     }
 
     /**
-     * This method is shared between K2 phased pipeline and `K2JsCompilerImpl.compileNoIC` for K1 CLI
+     * This method is shared between K2 phased pipeline and [K2JsCompilerImpl.compileNoIC] for K1 CLI
      */
-    fun compileWithoutIC(
+    internal fun compileNonIncrementally(
         messageCollector: MessageCollector,
         ir2JsTransformer: Ir2JsTransformer,
         moduleKind: ModuleKind,

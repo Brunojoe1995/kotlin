@@ -34,13 +34,11 @@ object JsCliPipeline : AbstractCliPipeline<K2JSCompilerArguments>() {
 
     private fun createJsCodeGenerationPhase(): CompilerPhase<PipelineContext, ArgumentsPipelineArtifact<K2JSCompilerArguments>, JsBackendPipelineArtifact> {
         return JsConfigurationPhase then
-                JsKlibLoadingPipelinePhase then
                 JsBackendPipelinePhase
     }
 
     private fun createWasmCodeGenerationPhase(): CompilerPhase<PipelineContext, ArgumentsPipelineArtifact<K2JSCompilerArguments>, WasmBackendPipelineArtifact> {
         return JsConfigurationPhase then
-                WasmKlibLoadingPipelinePhase then
                 WasmBackendPipelinePhase
     }
 

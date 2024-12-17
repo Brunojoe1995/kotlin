@@ -182,7 +182,7 @@ internal class K2JsCompilerImpl(
         targetConfiguration: CompilerConfiguration,
         moduleKind: ModuleKind?
     ): ExitCode {
-        JsBackendPipelinePhase.compileWithIC(
+        JsBackendPipelinePhase.compileIncrementally(
             icCaches,
             configuration,
             moduleKind ?: return INTERNAL_ERROR,
@@ -210,7 +210,7 @@ internal class K2JsCompilerImpl(
             if (arguments.listPhases) it.list(getJsPhases(configuration))
         }
         val ir2JsTransformer = Ir2JsTransformer(arguments, module, messageCollector, mainCallArguments)
-        val outputs = JsBackendPipelinePhase.compileWithoutIC(
+        val outputs = JsBackendPipelinePhase.compileNonIncrementally(
             messageCollector,
             ir2JsTransformer,
             moduleKind,

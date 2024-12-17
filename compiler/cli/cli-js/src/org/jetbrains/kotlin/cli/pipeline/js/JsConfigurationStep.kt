@@ -88,7 +88,7 @@ object CommonWebConfigurationUpdater : ConfigurationUpdater<K2JSCompilerArgument
         configuration.icCacheReadOnly = arguments.icCacheReadonly
         configuration.preserveIcOrder = arguments.preserveIcOrder
 
-        // setup phase config for the first compilation stage (KLib compilation)
+        // setup phase config for the first compilation stage (KLIB compilation)
         if (arguments.includes == null) {
             configuration.phaseConfig = createPhaseConfig(arguments).also {
                 if (arguments.listPhases) it.list(JsPreSerializationLoweringPhasesProvider.lowerings(configuration))
@@ -98,9 +98,9 @@ object CommonWebConfigurationUpdater : ConfigurationUpdater<K2JSCompilerArgument
         if (arguments.includes == null && arguments.irProduceJs) {
             configuration.messageCollector.report(
                 ERROR,
-                "It's not possible to produce KLib (`${K2JSCompilerArguments::includes.cliArgument} = null`) "
-                        + "and compile resulting JS binary (`${K2JSCompilerArguments::irProduceJs.cliArgument}`) at the same time "
-                        + "with K2 compiler"
+                "It is not possible to produce a KLIB ('${K2JSCompilerArguments::includes.cliArgument}' is not passed) "
+                        + "and compile the resulting JavaScript artifact ('${K2JSCompilerArguments::irProduceJs.cliArgument}' is passed) at the same time "
+                        + "with the K2 compiler"
             )
         }
     }
@@ -344,10 +344,10 @@ object JsConfigurationUpdater : ConfigurationUpdater<K2JSCompilerArguments>() {
 
     internal fun checkWasmArgumentsUsage(arguments: K2JSCompilerArguments, messageCollector: MessageCollector) {
         if (arguments.irDceDumpReachabilityInfoToFile != null) {
-            messageCollector.report(STRONG_WARNING, "Dumping the reachability info to file is not supported for Kotlin/Js.")
+            messageCollector.report(STRONG_WARNING, "Dumping the reachability info to a file is not supported for Kotlin/JS.")
         }
         if (arguments.irDceDumpDeclarationIrSizesToFile != null) {
-            messageCollector.report(STRONG_WARNING, "Dumping the size of declarations to file is not supported for Kotlin/Js.")
+            messageCollector.report(STRONG_WARNING, "Dumping the sizes of declarations to file is not supported for Kotlin/JS.")
         }
     }
 }

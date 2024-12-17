@@ -54,7 +54,7 @@ internal class K2WasmCompilerImpl(
         targetConfiguration: CompilerConfiguration,
         moduleKind: ModuleKind?,
     ): ExitCode {
-        WasmBackendPipelinePhase.compileWithIC(
+        WasmBackendPipelinePhase.compileIncrementally(
             icCaches,
             configuration,
             moduleName,
@@ -80,7 +80,7 @@ internal class K2WasmCompilerImpl(
         }
 
 
-        WasmBackendPipelinePhase.compileWithoutIC(
+        WasmBackendPipelinePhase.compileNonIncrementally(
             configuration,
             module,
             outputName,

@@ -11,7 +11,10 @@ import org.jetbrains.kotlin.cli.js.IcCachesArtifacts
 import org.jetbrains.kotlin.cli.js.IcCachesConfigurationData
 import org.jetbrains.kotlin.cli.js.prepareIcCaches
 import org.jetbrains.kotlin.cli.js.runStandardLibrarySpecialCompatibilityChecks
+import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
+import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.cli.pipeline.CheckCompilationErrors
+import org.jetbrains.kotlin.cli.pipeline.ConfigurationPipelineArtifact
 import org.jetbrains.kotlin.cli.pipeline.PipelinePhase
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.messageCollector
@@ -33,13 +36,15 @@ import org.jetbrains.kotlin.js.config.wasmCompilation
 import org.jetbrains.kotlin.wasm.config.WasmConfigurationKeys
 import java.io.File
 
-sealed class WebBackendPipelinePhase<O : WebBackendPipelineArtifact>(name: String) : PipelinePhase<JsLoadedKlibPipelineArtifact, O>(
+sealed class WebBackendPipelinePhase<Output : WebBackendPipelineArtifact>(
+    name: String
+) : PipelinePhase<ConfigurationPipelineArtifact, Output>(
     name = name,
     preActions = emptySet(),
     postActions = setOf(CheckCompilationErrors.CheckDiagnosticCollector)
 ) {
-    override fun executePhase(input: JsLoadedKlibPipelineArtifact): O? {
-        val (project, configuration) = input
+    override fun executePhase(input: ConfigurationPipelineArtifact): Output? {
+        val configuration = input.configuration
         val messageCollector = configuration.messageCollector
 
         val cacheDirectory = configuration.icCacheDirectory
@@ -47,7 +52,7 @@ sealed class WebBackendPipelinePhase<O : WebBackendPipelineArtifact>(name: Strin
         messageCollector.report(CompilerMessageSeverity.INFO, "Produce executable: $outputDirPath")
         messageCollector.report(CompilerMessageSeverity.INFO, "Cache directory: $cacheDirectory")
 
-        val mainCallArguments = if (K2JsArgumentConstants.NO_CALL == configuration.callMainMode) null else emptyList<String>()
+        val mainCallArguments = if (configuration.callMainMode == K2JsArgumentConstants.NO_CALL) null else emptyList<String>()
 
         if (cacheDirectory != null) {
             val icCacheReadOnly = configuration.wasmCompilation && configuration.icCacheReadOnly
@@ -72,13 +77,17 @@ sealed class WebBackendPipelinePhase<O : WebBackendPipelineArtifact>(name: Strin
                 }
                 prepareIcCaches(
                     cacheDirectory = cacheDirectory,
-                    data = IcCachesConfigurationData(
-                        wasmCompilation = configuration.wasmCompilation,
-                        wasmDebug = configuration.getBoolean(WasmConfigurationKeys.WASM_DEBUG),
-                        preserveIcOrder = configuration.preserveIcOrder,
-                        granularity = configuration.granularity!!,
-                        includes = configuration.includes!!
-                    ),
+                    icConfigurationData = when {
+                        configuration.wasmCompilation -> IcCachesConfigurationData.Wasm(
+                            configuration.includes!!,
+                            wasmDebug = configuration.getBoolean(WasmConfigurationKeys.WASM_DEBUG),
+                            preserveIcOrder = configuration.preserveIcOrder
+                        )
+                        else -> IcCachesConfigurationData.Js(
+                            configuration.includes!!,
+                            granularity = configuration.granularity!!
+                        )
+                    },
                     messageCollector = messageCollector,
                     outputDir = configuration.outputDir!!,
                     libraries = configuration.libraries,
@@ -96,7 +105,7 @@ sealed class WebBackendPipelinePhase<O : WebBackendPipelineArtifact>(name: Strin
             // TODO: One day, when we will lower IR and produce JS AST per module,
             //      think about using different directories for JS AST and JS code.
             val output = cacheGuard.tryAcquireAndRelease {
-                compileWithIC(icCaches, configuration)
+                compileIncrementally(icCaches, configuration)
             }
             return output
         } else {
@@ -105,8 +114,13 @@ sealed class WebBackendPipelinePhase<O : WebBackendPipelineArtifact>(name: Strin
             val mainLibPath = configuration.libraries.find { File(it).canonicalPath == includesPath }
                 ?: error("No library with name $includes ($includesPath) found")
             val kLib = MainModule.Klib(mainLibPath)
+            val environment = KotlinCoreEnvironment.createForProduction(
+                input.rootDisposable,
+                configuration,
+                configFiles
+            )
             val module = ModulesStructure(
-                project,
+                environment.project,
                 kLib,
                 configuration,
                 configuration.libraries,
@@ -118,15 +132,17 @@ sealed class WebBackendPipelinePhase<O : WebBackendPipelineArtifact>(name: Strin
                     messageCollector
                 )
             }
-            return compileWithoutIC(configuration, module, mainCallArguments)
+            return compileNonIncrementally(configuration, module, mainCallArguments)
         }
     }
 
-    abstract fun compileWithIC(icCaches: IcCachesArtifacts, configuration: CompilerConfiguration): O?
+    protected abstract val configFiles: EnvironmentConfigFiles
 
-    abstract fun compileWithoutIC(
+    abstract fun compileIncrementally(icCaches: IcCachesArtifacts, configuration: CompilerConfiguration): Output?
+
+    abstract fun compileNonIncrementally(
         configuration: CompilerConfiguration,
         module: ModulesStructure,
         mainCallArguments: List<String>?,
-    ): O?
+    ): Output?
 }

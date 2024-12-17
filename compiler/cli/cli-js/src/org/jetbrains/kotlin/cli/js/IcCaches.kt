@@ -11,7 +11,6 @@ import org.jetbrains.kotlin.cli.common.arguments.K2JSCompilerArguments
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity.INFO
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.config.CompilerConfiguration
-import org.jetbrains.kotlin.config.phaser.PhaseConfig
 import org.jetbrains.kotlin.ir.backend.js.JsICContext
 import org.jetbrains.kotlin.ir.backend.js.ic.CacheUpdater
 import org.jetbrains.kotlin.ir.backend.js.ic.DirtyFileState
@@ -21,13 +20,20 @@ import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.collections.iterator
 
-data class IcCachesConfigurationData(
-    val wasmCompilation: Boolean,
-    val wasmDebug: Boolean,
-    val preserveIcOrder: Boolean,
-    val granularity: JsGenerationGranularity,
-    val includes: String
-)
+sealed class IcCachesConfigurationData {
+    abstract val includes: String
+
+    data class Js(
+        override val includes: String,
+        val granularity: JsGenerationGranularity,
+    ) : IcCachesConfigurationData()
+
+    data class Wasm(
+        override val includes: String,
+        val wasmDebug: Boolean,
+        val preserveIcOrder: Boolean,
+    ) : IcCachesConfigurationData()
+}
 
 internal fun prepareIcCaches(
     cacheDirectory: String,
@@ -40,13 +46,17 @@ internal fun prepareIcCaches(
     mainCallArguments: List<String>?,
     icCacheReadOnly: Boolean,
 ): IcCachesArtifacts {
-    val data = IcCachesConfigurationData(
-        wasmCompilation = arguments.wasm,
-        arguments.wasmDebug,
-        arguments.preserveIcOrder,
-        arguments.granularity,
-        arguments.includes!!
-    )
+    val data = when {
+        arguments.wasm -> IcCachesConfigurationData.Wasm(
+            arguments.includes!!,
+            arguments.wasmDebug,
+            arguments.preserveIcOrder
+        )
+        else -> IcCachesConfigurationData.Js(
+            arguments.includes!!,
+            arguments.granularity
+        )
+    }
     return prepareIcCaches(
         cacheDirectory,
         data,
@@ -62,7 +72,7 @@ internal fun prepareIcCaches(
 
 internal fun prepareIcCaches(
     cacheDirectory: String,
-    data: IcCachesConfigurationData,
+    icConfigurationData: IcCachesConfigurationData,
     messageCollector: MessageCollector,
     outputDir: File,
     libraries: List<String>,
@@ -80,27 +90,25 @@ internal fun prepareIcCaches(
 
     val start = System.currentTimeMillis()
 
-    val icContext = if (data.wasmCompilation) {
-        WasmICContext(
-            allowIncompleteImplementations = false,
-            skipLocalNames = !data.wasmDebug,
-            safeFragmentTags = data.preserveIcOrder
-        )
-    } else {
-        JsICContext(
+    val icContext = when (icConfigurationData) {
+        is IcCachesConfigurationData.Js -> JsICContext(
             mainCallArguments,
-            data.granularity,
+            icConfigurationData.granularity,
+        )
+        is IcCachesConfigurationData.Wasm -> WasmICContext(
+            allowIncompleteImplementations = false,
+            skipLocalNames = !icConfigurationData.wasmDebug,
+            safeFragmentTags = icConfigurationData.preserveIcOrder
         )
     }
-
     val cacheUpdater = CacheUpdater(
-        mainModule = data.includes,
+        mainModule = icConfigurationData.includes,
         allModules = libraries,
         mainModuleFriends = friendLibraries,
         cacheDir = cacheDirectory,
         compilerConfiguration = targetConfiguration,
         icContext = icContext,
-        checkForClassStructuralChanges = data.wasmCompilation,
+        checkForClassStructuralChanges = icConfigurationData is IcCachesConfigurationData.Wasm,
         commitIncrementalCache = !icCacheReadOnly,
     )
 
