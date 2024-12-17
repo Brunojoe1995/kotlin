@@ -69,9 +69,9 @@ object CommonWebConfigurationUpdater : ConfigurationUpdater<K2JSCompilerArgument
 
     /**
      * This part of the configuration update is shared between phased K2 CLI and
-     * K1 implementation of `K2JSCompiler.setupPlatformSpecificArgumentsAndServices`.
+     * K1 implementation of [K2JSCompiler.setupPlatformSpecificArgumentsAndServices].
      */
-    fun setupPlatformSpecificArgumentsAndServices(
+    internal fun setupPlatformSpecificArgumentsAndServices(
         configuration: CompilerConfiguration,
         arguments: K2JSCompilerArguments,
         services: Services,
@@ -198,7 +198,7 @@ object CommonWebConfigurationUpdater : ConfigurationUpdater<K2JSCompilerArgument
         )
     }
 
-    fun initializeCommonConfiguration(configuration: CompilerConfiguration, arguments: K2JSCompilerArguments) {
+    internal fun initializeCommonConfiguration(configuration: CompilerConfiguration, arguments: K2JSCompilerArguments) {
         val libraries: List<String> = configureLibraries(arguments.libraries) + listOfNotNull(arguments.includes)
         val friendLibraries: List<String> = configureLibraries(arguments.friendModules)
         configuration.libraries += libraries
@@ -249,9 +249,9 @@ object JsConfigurationUpdater : ConfigurationUpdater<K2JSCompilerArguments>() {
 
     /**
      * This part of the configuration update is shared between phased K2 CLI and
-     * K1 implementation of `K2JsCompilerImpl.tryInitializeCompiler`.
+     * K1 implementation of [K2JsCompilerImpl.tryInitializeCompiler].
      */
-    fun fillConfiguration(configuration: CompilerConfiguration, arguments: K2JSCompilerArguments) {
+    internal fun fillConfiguration(configuration: CompilerConfiguration, arguments: K2JSCompilerArguments) {
         val messageCollector = configuration.messageCollector
         val targetVersion = initializeAndCheckTargetVersion(arguments, configuration, messageCollector)
         configuration.optimizeGeneratedJs = arguments.optimizeGeneratedJs
@@ -279,20 +279,6 @@ object JsConfigurationUpdater : ConfigurationUpdater<K2JSCompilerArguments>() {
         } catch (_: IOException) {
             messageCollector.report(ERROR, "Could not resolve output directory", location = null)
         }
-    }
-
-    private fun initializeAndCheckTargetVersion(
-        arguments: K2JSCompilerArguments,
-        configuration: CompilerConfiguration,
-        messageCollector: MessageCollector,
-    ): EcmaVersion? {
-        val targetVersion = arguments.targetVersion?.also {
-            configuration.target = it
-        }
-
-        if (targetVersion == null) {
-            messageCollector.report(ERROR, "Unsupported ECMA version: ${arguments.target}")
-        }
 
         if (arguments.script) {
             messageCollector.report(ERROR, "K/JS does not support Kotlin script (*.kts) files")
@@ -306,6 +292,20 @@ object JsConfigurationUpdater : ConfigurationUpdater<K2JSCompilerArguments>() {
             if (arguments.includes.isNullOrEmpty()) {
                 messageCollector.report(ERROR, "Specify at least one source file or directory", location = null)
             }
+        }
+    }
+
+    private fun initializeAndCheckTargetVersion(
+        arguments: K2JSCompilerArguments,
+        configuration: CompilerConfiguration,
+        messageCollector: MessageCollector,
+    ): EcmaVersion? {
+        val targetVersion = arguments.targetVersion?.also {
+            configuration.target = it
+        }
+
+        if (targetVersion == null) {
+            messageCollector.report(ERROR, "Unsupported ECMA version: ${arguments.target}")
         }
         return targetVersion
     }
@@ -321,9 +321,9 @@ object WasmConfigurationUpdater : ConfigurationUpdater<K2JSCompilerArguments>() 
 
     /**
      * This part of the configuration update is shared between phased K2 CLI and
-     * K1 implementation of `K2WasmCompilerImpl.tryInitializeCompiler`.
+     * K1 implementation of [K2WasmCompilerImpl.tryInitializeCompiler].
      */
-    fun fillConfiguration(configuration: CompilerConfiguration, arguments: K2JSCompilerArguments) {
+    internal fun fillConfiguration(configuration: CompilerConfiguration, arguments: K2JSCompilerArguments) {
         configuration.put(WasmConfigurationKeys.WASM_ENABLE_ARRAY_RANGE_CHECKS, arguments.wasmEnableArrayRangeChecks)
         configuration.put(WasmConfigurationKeys.WASM_ENABLE_ASSERTS, arguments.wasmEnableAsserts)
         configuration.put(WasmConfigurationKeys.WASM_GENERATE_WAT, arguments.wasmGenerateWat)

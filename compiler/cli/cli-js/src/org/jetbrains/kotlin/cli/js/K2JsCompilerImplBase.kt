@@ -41,8 +41,4 @@ internal abstract class K2JsCompilerImplBase(
     ): ExitCode
 
     abstract fun tryInitializeCompiler(rootDisposable: Disposable): KotlinCoreEnvironment?
-
-    fun initializeCommonConfiguration(arguments: K2JSCompilerArguments) {
-        CommonWebConfigurationUpdater.initializeCommonConfiguration(configuration, arguments)
-    }
 }

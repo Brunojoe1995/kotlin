@@ -107,7 +107,7 @@ class K2JSCompiler : CLICompiler<K2JSCompilerArguments>() {
         val pluginLoadResult = loadPlugins(paths, arguments, configuration)
         if (pluginLoadResult != OK) return pluginLoadResult
 
-        compilerImpl.initializeCommonConfiguration(arguments)
+        CommonWebConfigurationUpdater.initializeCommonConfiguration(compilerImpl.configuration, arguments)
         val libraries = configuration.libraries
         val friendLibraries = configuration.friendLibraries
 
