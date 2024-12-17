@@ -32,6 +32,8 @@ class FirReplHistoryProviderImpl : FirReplHistoryProvider() {
     override fun putSnippet(symbol: FirReplSnippetSymbol) {
         history.add(symbol)
     }
+
+    override fun isFirstSnippet(symbol: FirReplSnippetSymbol): Boolean = history.firstOrNull() == symbol
 }
 
 

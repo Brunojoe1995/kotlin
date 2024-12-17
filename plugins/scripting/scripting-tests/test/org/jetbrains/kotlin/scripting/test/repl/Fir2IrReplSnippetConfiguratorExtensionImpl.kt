@@ -37,20 +37,26 @@ import org.jetbrains.kotlin.fir.types.impl.FirImplicitTypeRefImplWithoutSource
 import org.jetbrains.kotlin.fir.visitors.FirDefaultVisitorVoid
 import org.jetbrains.kotlin.ir.builders.declarations.addField
 import org.jetbrains.kotlin.ir.builders.declarations.addValueParameter
+import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
 import org.jetbrains.kotlin.ir.declarations.IrReplSnippet
 import org.jetbrains.kotlin.ir.declarations.impl.IrFactoryImpl
-import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.symbols.impl.IrClassSymbolImpl
 import org.jetbrains.kotlin.ir.symbols.impl.IrValueParameterSymbolImpl
 import org.jetbrains.kotlin.ir.util.createThisReceiverParameter
 import org.jetbrains.kotlin.ir.util.defaultType
-import org.jetbrains.kotlin.name.*
+import org.jetbrains.kotlin.ir.util.getPackageFragment
+import org.jetbrains.kotlin.name.ClassId
+import org.jetbrains.kotlin.name.FqName
+import org.jetbrains.kotlin.name.Name
+import org.jetbrains.kotlin.name.SpecialNames
 import kotlin.script.experimental.host.ScriptingHostConfiguration
 import kotlin.script.experimental.host.ScriptingHostConfigurationKeys
 import kotlin.script.experimental.util.PropertiesCollection
 
 val ScriptingHostConfigurationKeys.replStateObjectFqName by PropertiesCollection.key<String>()
+
+private val replStateDefaultName = Name.identifier("ReplState")
 
 object ScriptingGeneratorKey : GeneratedDeclarationKey() {
     override fun toString(): String {
@@ -60,75 +66,11 @@ object ScriptingGeneratorKey : GeneratedDeclarationKey() {
 
 class Fir2IrReplSnippetConfiguratorExtensionImpl(
     session: FirSession,
-    hostConfiguration: ScriptingHostConfiguration,
+    private val hostConfiguration: ScriptingHostConfiguration,
 ) : Fir2IrReplSnippetConfiguratorExtension(session) {
 
 
-    @OptIn(SymbolInternals::class, LookupTagInternals::class)
-    val replStateObject: FirRegularClass by lazy(LazyThreadSafetyMode.PUBLICATION) {
-        fun fqn2cid(s: String): ClassId {
-            val fqn = FqName(s)
-            return ClassId(fqn.parent(), fqn.shortName())
-        }
-
-        val classId = fqn2cid(hostConfiguration[ScriptingHostConfiguration.replStateObjectFqName]!!)
-        (session.dependenciesSymbolProvider.getClassLikeSymbolByClassId(classId) as? FirRegularClassSymbol)?.fir
-            ?: run {
-                val hashMapClassSymbol =
-                    session.dependenciesSymbolProvider.getClassLikeSymbolByClassId(
-                        fqn2cid("kotlin.collections.HashMap")
-                    )?.fullyExpandedClass(session) ?: error("HashMap class not found")
-                val firReplStateSymbol = FirRegularClassSymbol(classId)
-                val constructor = buildPrimaryConstructor {
-                    moduleData = session.moduleData
-                    origin = FirDeclarationOrigin.FromOtherReplSnippet
-                    status = FirResolvedDeclarationStatusImpl(
-                        Visibilities.Public,
-                        Modality.FINAL,
-                        EffectiveVisibility.Public
-                    )
-                    resolvePhase = FirResolvePhase.BODY_RESOLVE
-                    symbol = FirConstructorSymbol(classId)
-                    returnTypeRef = FirImplicitTypeRefImplWithoutSource
-                    dispatchReceiverType = firReplStateSymbol.constructType()
-                }
-                buildRegularClass {
-                    moduleData = session.moduleData
-                    origin = FirDeclarationOrigin.FromOtherReplSnippet
-                    this.name = classId.shortClassName
-                    status = FirResolvedDeclarationStatusImpl(
-                        Visibilities.Public,
-                        Modality.FINAL,
-                        EffectiveVisibility.Public
-                    )
-                    classKind = ClassKind.OBJECT
-                    symbol = firReplStateSymbol
-                    superTypeRefs += hashMapClassSymbol.defaultType().toFirResolvedTypeRef(null)
-                    resolvePhase = FirResolvePhase.BODY_RESOLVE
-                    scopeProvider = session.kotlinScopeProvider
-                    declarations += constructor
-                }.also {
-                    (it.symbol.toLookupTag() as? ConeClassLikeLookupTagImpl)?.bindSymbolToLookupTag(session, it.symbol)
-                    constructor.replaceReturnTypeRef(it.defaultType().toFirResolvedTypeRef())
-                    val delegatingConstructorCall = buildDelegatedConstructorCall {
-                        constructedTypeRef = it.superTypeRefs.singleOrNull() ?: error("No single super type for repl state found")
-                        val superConstructorSymbol = hashMapClassSymbol.declaredMemberScope(session, memberRequiredPhase = null)
-                            .getDeclaredConstructors()
-                            .firstOrNull { it.valueParameterSymbols.isEmpty() }
-                            ?: error("No arguments constructor for HashMap not found")
-                        calleeReference = buildResolvedNamedReference {
-                            name = superConstructorSymbol.name
-                            resolvedSymbol = superConstructorSymbol
-                        }
-                        argumentList = FirEmptyArgumentList
-                        isThis = false
-                    }
-                    constructor.replaceDelegatedConstructor(delegatingConstructorCall)
-                }
-            }
-    }
-
-    @OptIn(SymbolInternals::class, UnsafeDuringIrConstructionAPI::class)
+    @OptIn(SymbolInternals::class)
     override fun Fir2IrComponents.prepareSnippet(fir2IrVisitor: Fir2IrVisitor, firReplSnippet: FirReplSnippet, irSnippet: IrReplSnippet) {
         val propertiesFromState = hashSetOf<Pair<FirReplSnippetSymbol, FirPropertySymbol>>()
         val functionsFromState = hashSetOf<Pair<FirReplSnippetSymbol, FirNamedFunctionSymbol>>()
@@ -233,25 +175,102 @@ class Fir2IrReplSnippetConfiguratorExtensionImpl(
             }
         }
         val stateObject =
-            if (replStateObject.origin is FirDeclarationOrigin.FromOtherReplSnippet) {
-                classifierStorage.createAndCacheIrClass(replStateObject, irSnippet.parent).also { irReplStateObject ->
-                    classifiersGenerator.processClassHeader(replStateObject, irReplStateObject)
-                    declarationStorage.createAndCacheIrConstructor(
-                        replStateObject.declarations.filterIsInstance<FirPrimaryConstructor>().first(),
-                        { irReplStateObject }, isLocal = false
-                    )
-                    replStateObject.accept(fir2IrVisitor, null)
-                    Unit
-                }
-            } else {
-                lazyDeclarationsGenerator.createIrLazyClass(
-                    replStateObject,
-                    declarationStorage.getIrExternalPackageFragment(replStateObject.symbol.classId.packageFqName, session.moduleData),
-                    IrClassSymbolImpl()
-                )
-            }
+            getStateObject(
+                irSnippet,
+                fir2IrVisitor,
+                createIfNotFound = hostConfiguration[ScriptingHostConfiguration.replStateObjectFqName] == null &&
+                        hostConfiguration[ScriptingHostConfiguration.firReplHistoryProvider]!!.isFirstSnippet(firReplSnippet.symbol)
+            )
 
         irSnippet.stateObject = stateObject.symbol
+    }
+
+    @OptIn(SymbolInternals::class, LookupTagInternals::class)
+    private fun Fir2IrComponents.getStateObject(
+        irSnippet: IrReplSnippet,
+        fir2IrVisitor: Fir2IrVisitor,
+        createIfNotFound: Boolean,
+    ): IrClass {
+        fun fqn2cid(s: String): ClassId {
+            val fqn = FqName(s)
+            return ClassId(fqn.parent(), fqn.shortName())
+        }
+
+        val classId = hostConfiguration[ScriptingHostConfiguration.replStateObjectFqName]?.let(::fqn2cid)
+            ?: ClassId(irSnippet.getPackageFragment().packageFqName, replStateDefaultName)
+
+        val firReplStateFromDependencies =
+            (session.dependenciesSymbolProvider.getClassLikeSymbolByClassId(classId) as? FirRegularClassSymbol)?.fir
+
+        val firReplStateObject = firReplStateFromDependencies ?: run {
+            val hashMapClassSymbol =
+                session.dependenciesSymbolProvider.getClassLikeSymbolByClassId(
+                    fqn2cid("kotlin.collections.HashMap")
+                )?.fullyExpandedClass(session) ?: error("HashMap class not found")
+            val firReplStateSymbol = FirRegularClassSymbol(classId)
+            val constructor = buildPrimaryConstructor {
+                moduleData = session.moduleData
+                origin = FirDeclarationOrigin.FromOtherReplSnippet
+                status = FirResolvedDeclarationStatusImpl(
+                    Visibilities.Public,
+                    Modality.FINAL,
+                    EffectiveVisibility.Public
+                )
+                resolvePhase = FirResolvePhase.BODY_RESOLVE
+                symbol = FirConstructorSymbol(classId)
+                returnTypeRef = FirImplicitTypeRefImplWithoutSource
+                dispatchReceiverType = firReplStateSymbol.constructType()
+            }
+            buildRegularClass {
+                moduleData = session.moduleData
+                origin = FirDeclarationOrigin.FromOtherReplSnippet
+                this.name = classId.shortClassName
+                status = FirResolvedDeclarationStatusImpl(
+                    Visibilities.Public,
+                    Modality.FINAL,
+                    EffectiveVisibility.Public
+                )
+                classKind = ClassKind.OBJECT
+                symbol = firReplStateSymbol
+                superTypeRefs += hashMapClassSymbol.defaultType().toFirResolvedTypeRef(null)
+                resolvePhase = FirResolvePhase.BODY_RESOLVE
+                scopeProvider = session.kotlinScopeProvider
+                declarations += constructor
+            }.also {
+                (it.symbol.toLookupTag() as? ConeClassLikeLookupTagImpl)?.bindSymbolToLookupTag(session, it.symbol)
+                constructor.replaceReturnTypeRef(it.defaultType().toFirResolvedTypeRef())
+                val delegatingConstructorCall = buildDelegatedConstructorCall {
+                    constructedTypeRef = it.superTypeRefs.singleOrNull() ?: error("No single super type for repl state found")
+                    val superConstructorSymbol = hashMapClassSymbol.declaredMemberScope(session, memberRequiredPhase = null)
+                        .getDeclaredConstructors()
+                        .firstOrNull { it.valueParameterSymbols.isEmpty() }
+                        ?: error("No arguments constructor for HashMap not found")
+                    calleeReference = buildResolvedNamedReference {
+                        name = superConstructorSymbol.name
+                        resolvedSymbol = superConstructorSymbol
+                    }
+                    argumentList = FirEmptyArgumentList
+                    isThis = false
+                }
+                constructor.replaceDelegatedConstructor(delegatingConstructorCall)
+            }
+        }
+
+        return if (firReplStateFromDependencies == null && createIfNotFound) {
+            classifierStorage.createAndCacheIrClass(firReplStateObject, irSnippet.parent).also { irReplStateObject ->
+                classifiersGenerator.processClassHeader(firReplStateObject, irReplStateObject)
+                declarationStorage.createAndCacheIrConstructor(
+                    firReplStateObject.declarations.filterIsInstance<FirPrimaryConstructor>().first(),
+                    { irReplStateObject }, isLocal = false
+                )
+                firReplStateObject.accept(fir2IrVisitor, null)
+                Unit
+            }
+        } else {
+            val irReplStateParent =
+                declarationStorage.getIrExternalPackageFragment(firReplStateObject.symbol.classId.packageFqName, session.moduleData)
+            lazyDeclarationsGenerator.createIrLazyClass(firReplStateObject, irReplStateParent, IrClassSymbolImpl())
+        }
     }
 
     companion object {
@@ -259,13 +278,6 @@ class Fir2IrReplSnippetConfiguratorExtensionImpl(
             return Factory { session -> Fir2IrReplSnippetConfiguratorExtensionImpl(session, hostConfiguration) }
         }
     }
-}
-
-private fun FirReplSnippetSymbol.getTargetClassId(): ClassId {
-    // TODO: either make this transformation here but configure/retain target script name somewhere, or abstract it away, or make it on lowering
-    val snippetTargetName = NameUtils.getScriptNameForFile(name.asStringStripSpecialMarkers().removePrefix("script-"))
-    // TODO: take base package from snippet symbol (see todo elsewhere for adding it to the symbol)
-    return ClassId(FqName.ROOT, snippetTargetName)
 }
 
 private class CollectAccessToOtherState(

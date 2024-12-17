@@ -85,7 +85,6 @@ private class ReplConfigurator(testServices: TestServices) : EnvironmentConfigur
     override fun configureCompilerConfiguration(configuration: CompilerConfiguration, module: TestModule) {
         val hostConfiguration = ScriptingHostConfiguration(defaultJvmScriptingHostConfiguration) {
             firReplHistoryProvider(FirReplHistoryProviderImpl())
-            replStateObjectFqName("${module.name}.ReplState")
             // TODO: add jdk path and other params if needed
         }
         configuration.add(CompilerPluginRegistrar.COMPILER_PLUGIN_REGISTRARS, TestReplCompilerPluginRegistrar(hostConfiguration))

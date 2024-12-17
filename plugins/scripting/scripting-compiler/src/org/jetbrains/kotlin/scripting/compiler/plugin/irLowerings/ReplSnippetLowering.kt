@@ -83,7 +83,7 @@ internal class ReplSnippetsToClassesLowering(val context: IrPluginContext) : Mod
 
     private fun collectCapturingClasses(irSnippet: IrReplSnippet, irSnippetClass: IrClass, typeRemapper: SimpleTypeRemapper): Set<IrClass> {
         val externalReceivers = mutableSetOf<IrType>().also {
-            it.addIfNotNull(irSnippetClass.thisReceiver?.type)
+//            it.addIfNotNull(irSnippetClass.thisReceiver?.type)
         }
 
         irSnippet.receiversParameters.forEach {
@@ -91,13 +91,13 @@ internal class ReplSnippetsToClassesLowering(val context: IrPluginContext) : Mod
             externalReceivers.add(typeRemapper.remapType(it.type))
         }
 
-        irSnippet.capturingDeclarationsFromOtherSnippets.forEach {
-            val type = (it.parent as? IrClass)?.thisReceiver?.type
-            if (type != null) {
-                externalReceivers.add(type)
-                externalReceivers.add(typeRemapper.remapType(type))
-            }
-        }
+//        irSnippet.capturingDeclarationsFromOtherSnippets.forEach {
+//            val type = (it.parent as? IrClass)?.thisReceiver?.type
+//            if (type != null) {
+//                externalReceivers.add(type)
+//                externalReceivers.add(typeRemapper.remapType(type))
+//            }
+//        }
 
         val topLevelClasses = irSnippet.body.statements.filterIsInstance<IrClass>()
         return topLevelClasses.collectCapturersByReceivers(context, irSnippet, externalReceivers, alwaysInclude = topLevelClasses.toSet())
