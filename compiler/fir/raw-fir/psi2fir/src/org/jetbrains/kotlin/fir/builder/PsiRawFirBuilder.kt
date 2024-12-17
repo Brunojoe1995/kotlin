@@ -1429,7 +1429,7 @@ open class PsiRawFirBuilder(
 
                 body = buildOrLazyBlock {
                     withContainerSymbol(snippetSymbol, isLocal = true) {
-                        withForcedLocalContext {
+//                        withForcedLocalContext {
                             buildBlock {
                                 script.declarations.forEach { declaration ->
                                     when (declaration) {
@@ -1475,7 +1475,7 @@ open class PsiRawFirBuilder(
                                 }
                             }
                         }
-                    }
+//                    }
                 }
                 // TODO: proper lazy support - see the script
                 resultTypeRef =

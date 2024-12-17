@@ -1012,7 +1012,7 @@ internal fun addDeclarationToParent(declaration: IrDeclaration, irParent: IrDecl
         is IrClass -> irParent.declarations += declaration
         is IrFile -> irParent.declarations += declaration
         is IrExternalPackageFragment -> irParent.declarations += declaration
-        is IrScript -> {
+        is IrScript, is IrReplSnippet -> {
             /*
              * All declarations of the script will be added during main script conversion
              */
