@@ -9,7 +9,6 @@ import org.jetbrains.kotlin.*
 import org.jetbrains.kotlin.analysis.low.level.api.fir.element.builder.DuplicatedFirSourceElementsException
 import org.jetbrains.kotlin.analysis.low.level.api.fir.util.isErrorElement
 import org.jetbrains.kotlin.fir.FirElement
-import org.jetbrains.kotlin.fir.FirImplementationDetail
 import org.jetbrains.kotlin.fir.builder.toFirOperationOrNull
 import org.jetbrains.kotlin.fir.declarations.FirTypeParameter
 import org.jetbrains.kotlin.fir.expressions.*
@@ -24,7 +23,7 @@ import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.findDescendantOfType
-import org.jetbrains.kotlin.psi.psiUtil.visitBinaryExpressionUsingStack
+import org.jetbrains.kotlin.psi.psiUtil.tryVisitFoldingStringConcatenation
 import org.jetbrains.kotlin.types.ConstantValueKind
 import org.jetbrains.kotlin.util.OperatorNameConventions
 
@@ -74,21 +73,18 @@ internal open class FirElementsRecorder : FirVisitor<Unit, MutableMap<KtElement,
         super.visitTypeParameter(typeParameter, data)
     }
 
-    @OptIn(FirImplementationDetail::class)
     override fun visitStringConcatenationCall(
         stringConcatenationCall: FirStringConcatenationCall,
         data: MutableMap<KtElement, FirElement>,
     ) {
         if (stringConcatenationCall.isFoldedStrings) {
-            stringConcatenationCall.psi?.accept(object : KtVisitorVoid() {
-                override fun visitBinaryExpression(expression: KtBinaryExpression) {
-                    visitBinaryExpressionUsingStack(expression) { data.put(it, stringConcatenationCall) }
-                }
+            val foldingStringConcatenationStack = (stringConcatenationCall.psi as KtBinaryExpression).tryVisitFoldingStringConcatenation()!!
+            for (child in foldingStringConcatenationStack) {
+                cache(child, stringConcatenationCall, data)
             }
-            )
+        } else {
+            super.visitStringConcatenationCall(stringConcatenationCall, data)
         }
-
-        super.visitStringConcatenationCall(stringConcatenationCall, data)
     }
 
     override fun visitVariableAssignment(variableAssignment: FirVariableAssignment, data: MutableMap<KtElement, FirElement>) {

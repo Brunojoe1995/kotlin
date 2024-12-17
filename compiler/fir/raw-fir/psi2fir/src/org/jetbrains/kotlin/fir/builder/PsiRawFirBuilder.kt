@@ -52,6 +52,7 @@ import org.jetbrains.kotlin.utils.addToStdlib.shouldNotBeCalled
 import org.jetbrains.kotlin.utils.exceptions.errorWithAttachment
 import org.jetbrains.kotlin.utils.exceptions.requireWithAttachment
 import org.jetbrains.kotlin.utils.exceptions.withPsiEntry
+import org.jetbrains.kotlin.utils.filterIsInstanceMapNotNullTo
 
 open class PsiRawFirBuilder(
     session: FirSession,
@@ -298,7 +299,7 @@ open class PsiRawFirBuilder(
             this().toFirExpression(errorReason)
 
         private fun KtElement?.toFirExpression(
-            errorReason: String = "",
+            errorReason: String,
             kind: DiagnosticKind = DiagnosticKind.ExpressionExpected,
         ): FirExpression = toFirExpression { ConeSimpleDiagnostic(errorReason, kind) }
 
@@ -3040,47 +3041,23 @@ open class PsiRawFirBuilder(
             }.bindLabel(expression).build()
         }
 
-        /**
-         * @see [org.jetbrains.kotlin.fir.lightTree.converter.LightTreeRawFirExpressionBuilder.tryFoldStringConcatenation]
-         */
-        private fun tryFoldStringConcatenation(binaryExpression: KtBinaryExpression): FirStatement? {
-            val input = mutableListOf<KtExpression?>()
-            val output = mutableListOf<KtExpression?>()
-            input.add(binaryExpression)
-            while (input.isNotEmpty()) {
-                var node = input.pop()
-                when (node) {
-                    is KtBinaryExpression -> {
-                        if (node.operationToken != PLUS) {
-                            return null
-                        }
-
-                        input.add(node.left)
-                        input.add(node.right)
-                    }
-                    is KtParenthesizedExpression -> {
-                        input.add(node.expression)
-                    }
-                    else -> {
-                        if (node !is KtStringTemplateExpression) {
-                            return null
-                        } else {
-                            output.add(node)
-                        }
-                    }
-                }
-            }
-
-            return buildStringConcatenationCall {
-                argumentList = buildArgumentList { arguments += output.asReversed().map { it.toFirExpression() } }
-                source = binaryExpression.toFirSourceElement()
-                interpolationPrefix = ""
-                isFoldedStrings = true
-            }
-        }
-
         override fun visitBinaryExpression(expression: KtBinaryExpression, data: FirElement?): FirElement {
-            return tryFoldStringConcatenation(expression) ?: visitBinaryExpressionFallback(expression)
+            val foldingStringConcatenationStack = expression.tryVisitFoldingStringConcatenation()
+
+            return if (foldingStringConcatenationStack != null) {
+                buildStringConcatenationCall {
+                    argumentList = buildArgumentList {
+                        foldingStringConcatenationStack.filterIsInstanceMapNotNullTo<KtStringTemplateExpression, FirExpression, MutableList<FirExpression>>(
+                            arguments
+                        ) { it.convert() }
+                    }
+                    source = expression.toFirSourceElement()
+                    interpolationPrefix = ""
+                    isFoldedStrings = true
+                }
+            } else {
+                visitBinaryExpressionFallback(expression)
+            }
         }
 
         private fun visitBinaryExpressionFallback(expression: KtBinaryExpression): FirElement {

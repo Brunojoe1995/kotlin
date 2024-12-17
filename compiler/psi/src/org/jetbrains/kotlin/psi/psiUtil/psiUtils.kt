@@ -33,10 +33,12 @@ import org.jetbrains.kotlin.KtNodeTypes.*
 import org.jetbrains.kotlin.KtSourceElement
 import org.jetbrains.kotlin.diagnostics.PsiDiagnosticUtils
 import org.jetbrains.kotlin.lexer.KtTokens
+import org.jetbrains.kotlin.lexer.KtTokens.PLUS
 import org.jetbrains.kotlin.psi
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.util.getChildren
 import java.util.*
+import kotlin.collections.ArrayDeque
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 
@@ -46,33 +48,51 @@ import kotlin.contracts.contract
 
 /**
  * Emulates recursion using a stack to prevent StackOverflow exception on big concatenation expressions like
- * `val x = "a0" + "a1" + ... + "a9999"`
+ * `val x = "a0" + "a1" + ... + "a9999"` (it's relatively common in machine-generated code)
 
- * Traversing order is different from using default [KtVisitorVoid]!
- * However, it is the same at least for regular left-associative expression.
+ * This method traverses the provided `KtBinaryExpression`, tries to extract all string template nodes and returns
+ * the list of nested expressions in direct order if the input `KtBinaryExpression` matches the string literals concatenation pattern.
+ * Otherwise, it returns `null`.
+ * The method handles nested expressions by pushing nodes onto an input stack and processing them iteratively.
+ *
  * For instance, the "a" + "b" + "c" is represented as
  *
  * ```
- *          '+'
- *      '+'     'c'
- *  'a'     'b'
+ *          '+'(0)
+ *      '+'(1)     'c'
+ *  'a'        'b'
  * ```
  *
- * And it's traversed as: 'a', '+', 'b', '+', 'c'
+ * And traversed as: 'a', 'b', '+'(1), 'c' '+'(0)
  */
-fun KtVisitorVoid.visitBinaryExpressionUsingStack(expression: KtBinaryExpression, visitBinaryExpression: (KtExpression) -> Unit = {}) {
-    val stack = kotlin.collections.ArrayDeque<PsiElement>().also { it.add(expression) }
-    while (stack.isNotEmpty()) {
-        val element = stack.removeLast()
-        if (element is KtBinaryExpression) {
-            visitBinaryExpression(element)
-            for (i in element.children.size - 1 downTo 0) {
-                stack.addLast(element.children[i])
+fun KtBinaryExpression.tryVisitFoldingStringConcatenation(): List<KtExpression>? {
+    val input = mutableListOf<KtExpression?>().also { it.add(this) }
+    val output = ArrayDeque<KtExpression>()
+
+    while (input.isNotEmpty()) {
+        var node = input.removeLast()
+        node?.let { output.addFirst(it) }
+        when (node) {
+            is KtBinaryExpression -> {
+                if (node.operationToken != PLUS) {
+                    return null
+                }
+
+                input.add(node.left)
+                input.add(node.right)
             }
-        } else {
-            element.accept(this)
+            is KtParenthesizedExpression -> {
+                input.add(node.expression)
+            }
+            else -> {
+                if (node !is KtStringTemplateExpression) {
+                    return null
+                }
+            }
         }
     }
+
+    return output
 }
 
 val PsiElement.allChildren: PsiChildRange
